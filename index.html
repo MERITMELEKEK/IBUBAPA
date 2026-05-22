@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Pintar SK Melekek - Portal Waris</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root { --primary: #4361ee; --success: #2ecc71; --danger: #ef476f; --dark: #2b2d42; --bg: #f8faff; --rmt: #ff9f43; --card: #ffffff; --purple: #7209b7; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--dark); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        .top-bar { background: linear-gradient(135deg, #7209b7, #4361ee); color: white; padding: 30px 20px 45px 20px; border-radius: 0 0 35px 35px; text-align: center; box-shadow: 0 10px 20px rgba(114, 9, 183, 0.15); }
+        .search-container { margin: -25px 20px 15px 20px; position: relative; z-index: 101; }
+        #cariUtama, .input-carian { width: 100%; padding: 18px 25px; border-radius: 20px; border: none; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 1rem; outline: none; box-sizing: border-box; }
+        .content { padding: 0 20px 100px 20px; }
+        .section-title { font-size: 0.8rem; font-weight: 700; color: #a0a0a0; margin: 25px 0 12px 5px; text-transform: uppercase; letter-spacing: 1.2px; }
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card-btn { background: var(--card); padding: 22px 15px; border-radius: 24px; text-align: center; font-weight: 700; color: var(--primary); box-shadow: 0 8px 15px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid rgba(0,0,0,0.02); transition: transform 0.1s ease; }
+        .card-full { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .view-section { display: none; }
+        .murid-item { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); border: 1px solid #eee; }
+        .btn-aksi { padding: 14px; border: none; border-radius: 15px; color: white; font-weight: 700; flex: 1; cursor: pointer; font-size: 0.85rem; transition: transform 0.1s ease; }
+        .badge-skor { background: var(--dark); color: white; padding: 8px 15px; border-radius: 12px; font-weight: 800; }
+        
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 5000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .modal { background: white; width: 100%; max-width: 400px; border-radius: 35px; padding: 30px; text-align: center; animation: slideUp 0.3s ease-out; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+        
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .score-big { font-size: 3.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
+        input[type="date"], select { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #eee; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
+        .status-nfc-aktif { background: #e8f5e9; color: var(--success); padding: 8px; text-align: center; border-radius: 12px; font-size: 0.75rem; font-weight: bold; margin-bottom: 15px; border: 1px dashed var(--success); display: none; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; align-items: center; text-align: left;}
+        .stat-count { background: var(--danger); color: white; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<!-- Popup Global Semakan Kad Anak (NFC) -->
+<div id="popupNfcGlobal" class="overlay">
+    <div class="modal" id="modalNfc">
+        <div id="gNfcIcon" style="font-size: 50px; margin-bottom: 10px;">💳</div>
+        <h3 id="gNfcNama" style="margin-bottom:5px;">NAMA MURID</h3>
+        <p id="gNfcKelas" style="margin-top:0; color:#888; font-size:0.85rem;">Tahun / Kelas</p>
+        
+        <div id="gNfcScoreBox">
+            <p style="margin: 5px 0 0 0; font-size: 0.8rem; color:#666; font-weight: 600;">JUMLAH MARKAH MERIT SEMASA</p>
+            <div class="score-big" id="gNfcSkorDisplay">0</div>
+        </div>
+        
+        <div id="gNfcRalat" style="display:none; color:var(--danger); font-weight:bold; margin: 15px 0; font-size: 0.9rem;">
+            ⚠️ Kad pintar ini belum didaftarkan oleh pihak sekolah. Sila hubungi guru kelas.
+        </div>
+        
+        <button class="btn-aksi" style="background:#eee; color:var(--dark); width:100%; margin-top:15px;" onclick="tutupPopupNfcGlobal()">TUTUP SEMAKAN</button>
+    </div>
+</div>
+
+<div class="top-bar">
+    <h2>PORTAL IBU BAPA</h2>
+    <p style="margin:0; opacity:0.8; font-size:0.8rem;">SK MELEKEK • Semakan Merit & Sahsiah</p>
+</div>
+
+<div class="search-container">
+    <div id="nfcStatusIndicator" class="status-nfc-aktif">📡 ANTENNA NFC WARIS DIHIDUPKAN (SILA RAPATKAN KAD ANAK PADA PERANTI)</div>
+    <input type="text" id="cariUtama" placeholder="🔍 Cari nama anak / murid untuk semakan..." oninput="logikCarian(this.value)">
+</div>
+
+<div class="content">
+    <div id="menuFolder">
+        <div class="section-title">Semakan Pantas Peranti</div>
+        <div class="grid-menu">
+            <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN IMBASAN KAD ANAK</div>
+            <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">📅 REKOD KEHADIRAN</div>
+            <div class="card-btn" style="color:var(--rmt)" onclick="bukaRMT()">🍲 SEMAKAN RMT</div>
+            <div class="card-btn card-full" style="color:var(--danger);" onclick="bukaDisiplin()">🚨 REKOD DISIPLIN SEKOLAH</div>
+        </div>
+        
+        <div class="section-title">Kedudukan Merit Ikut Kelas</div>
+        <div id="gridKelas" class="grid-menu"></div>
+    </div>
+
+    <!-- View Senarai Kelas/Carian -->
+    <div id="senaraiView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
+            <h3 id="labelKelas" style="margin:0;">SENARAI MURID</h3>
+        </div>
+        <div id="muridContainer"></div>
+    </div>
+
+    <!-- View Kehadiran -->
+    <div id="kehadiranView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
+            <h3 style="margin:0;">LOG KEHADIRAN</h3>
+        </div>
+        <div id="statHadir" style="background:var(--dark); color:white; padding:15px; border-radius:20px; margin-bottom:15px; text-align:center;">Sila tunggu...</div>
+        <input type="date" id="tarikhHadir" onchange="renderKehadiran()">
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <select id="selTahunHadir" onchange="renderKehadiran()">
+                <option value="1">Tahun 1</option><option value="2">Tahun 2</option>
+                <option value="3">Tahun 3</option><option value="4">Tahun 4</option>
+                <option value="5">Tahun 5</option><option value="6">Tahun 6</option>
+            </select>
+            <select id="selKelasHadir" onchange="renderKehadiran()">
+                <option value="DELIMA">DELIMA</option><option value="ZAMRUD">ZAMRUD</option>
+            </select>
+        </div>
+        <div id="listKehadiranTable"></div>
+    </div>
+
+    <!-- View Kehadiran RMT -->
+    <div id="rmtView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
+            <h3 style="margin:0;">SENARAI RMT HARI INI</h3>
+        </div>
+        <div id="statRMT" style="background:var(--rmt); color:white; padding:20px; border-radius:20px; margin-bottom:15px; text-align:center;">Sila tunggu...</div>
+        <input type="date" id="tarikhRMT" onchange="renderRMT()">
+        <div id="listRMTTable"></div>
+    </div>
+
+    <!-- View Disiplin (Papar Sahaja) -->
+    <div id="disiplinView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
+            <h3 style="margin:0; color:var(--danger)">REKOD SALAH LAKU KESELURUHANN</h3>
+        </div>
+        
+        <div class="section-title" style="color:var(--danger)">Statistik Kesalahan Semasa Sekolah</div>
+        <div style="background:white; padding:20px; border-radius:20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); margin-bottom: 20px;" id="statKesalahanContainer"></div>
+
+        <div class="section-title">Log Tindakan Disiplin Terkini Murid</div>
+        <div id="senaraiKesalahanContainer"></div>
+    </div>
+</div>
+
+<script>
+    // --- KONFIGURASI FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAejpV7AXCzbPKhsmSo3jSmzggjxZ8eK3o",
+        authDomain: "sistem-merit-sk-melekek.firebaseapp.com",
+        databaseURL: "https://sistem-merit-sk-melekek-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sistem-merit-sk-melekek"
+    };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    let databaseMurid = [];
+    let databaseSalahLaku = [];
+    let curTahun, curKelas;
+    let nfcReaderInstance = null;
+
+    function getTarikhHariIni() {
+        const d = new Date();
+        const localTime = d.getTime() + (d.getTimezoneOffset() * 60000);
+        const myTime = new Date(localTime + (8 * 3600000)); 
+        return myTime.toISOString().split('T')[0];
+    }
+
+    // --- INTEGRASI NFC GLOBAL UNTUK IBU BAPA ---
+    async function aktifkanNfcLatarBelakang() {
+        if (!('NDEFReader' in window)) {
+            alert("Peranti atau pelayar web anda tidak mempunyai penderia imbasan NFC.");
+            return;
+        }
+        if (nfcReaderInstance) {
+            alert("Penderia NFC sedia diaktifkan secara latar belakang.");
+            return;
+        }
+
+        try {
+            nfcReaderInstance = new NDEFReader();
+            await nfcReaderInstance.scan();
+            
+            document.getElementById('nfcStatusIndicator').style.display = 'block';
+            document.getElementById('btnAktifNfc').style.background = '#2ecc71';
+            document.getElementById('btnAktifNfc').innerText = "✅ NFC WARIS AKTIF";
+            alert("Sistem sedia menerima imbasan kad anak anda!");
+
+            nfcReaderInstance.onreading = event => {
+                const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
+                paparMaklumatKadAnak(uid);
+            };
+        } catch(e) {
+            alert("Akses NFC ditolak. Sila benarkan kebenaran peranti.");
+            nfcReaderInstance = null;
+        }
+    }
+
+    // --- POPUP SEMAKAN REAL-TIME ANAK ---
+    function paparMaklumatKadAnak(uid) {
+        const m = databaseMurid.find(x => x.uid === uid);
+        document.getElementById('popupNfcGlobal').style.display = 'flex';
+
+        if(m) {
+            document.getElementById('gNfcIcon').innerText = "💳";
+            document.getElementById('gNfcNama').innerText = m.nama;
+            document.getElementById('gNfcKelas').innerText = `Tahun ${m.tahun} ${m.namaKelas}`;
+            document.getElementById('gNfcSkorDisplay').innerText = m.markah || 0;
+            document.getElementById('gNfcScoreBox').style.display = 'block';
+            document.getElementById('gNfcRalat').style.display = 'none';
+        } else {
+            document.getElementById('gNfcIcon').innerText = "❌";
+            document.getElementById('gNfcNama').innerText = "KAD TIDAK DIKENALI";
+            document.getElementById('gNfcKelas').innerText = "UID: " + uid;
+            document.getElementById('gNfcScoreBox').style.display = 'none';
+            document.getElementById('gNfcRalat').style.display = 'block';
+        }
+    }
+
+    function tutupPopupNfcGlobal() {
+        document.getElementById('popupNfcGlobal').style.display = 'none';
+    }
+
+    // --- NAVIGASI ---
+    function kembali() { 
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'block';
+        document.getElementById('cariUtama').value = "";
+    }
+
+    // --- KEHADIRAN AM ---
+    function bukaKehadiran() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'none';
+        document.getElementById('kehadiranView').style.display = 'block';
+        if(!document.getElementById('tarikhHadir').value) {
+            document.getElementById('tarikhHadir').value = getTarikhHariIni();
+        }
+        renderKehadiran();
+    }
+
+    async function renderKehadiran() {
+        const tarikh = document.getElementById('tarikhHadir').value;
+        const thn = document.getElementById('selTahunHadir').value;
+        const kls = document.getElementById('selKelasHadir').value;
+        const stat = document.getElementById('statHadir');
+        const container = document.getElementById('listKehadiranTable');
+
+        stat.innerText = "Memuat data kehadiran kelas...";
+        container.innerHTML = "";
+
+        const snapHadir = await db.ref('kehadiran/' + tarikh).once('value');
+        const dataHadir = snapHadir.val() || {};
+
+        let listMurid = databaseMurid.filter(m => m.tahun == thn && m.namaKelas == kls);
+        listMurid.sort((a,b) => a.nama.localeCompare(b.nama));
+
+        let hadirCount = 0;
+        listMurid.forEach(m => {
+            const isHadir = dataHadir[m.uid] === true;
+            if(isHadir) hadirCount++;
+            const statusBg = isHadir ? 'var(--success)' : '#fee2e2';
+            const statusColor = isHadir ? 'white' : 'var(--danger)';
+            const statusTxt = isHadir ? 'HADIR' : 'TIADA REKOD';
+
+            container.innerHTML += `
+            <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
+                    <div style="font-size:0.75rem; color:#888;">Kelas: ${m.tahun} ${m.namaKelas}</div>
+                </div>
+                <div style="background:${statusBg}; color:${statusColor}; padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:800;">
+                    ${statusTxt}
+                </div>
+            </div>`;
+        });
+
+        stat.innerHTML = `<div style="font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">KEHADIRAN KELAS ${thn} ${kls}</div>
+                          <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listMurid.length} Hadir</div>`;
+    }
+
+    // --- KEHADIRAN RMT ---
+    function bukaRMT() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'none';
+        document.getElementById('rmtView').style.display = 'block';
+        if(!document.getElementById('tarikhRMT').value) {
+            document.getElementById('tarikhRMT').value = getTarikhHariIni();
+        }
+        renderRMT();
+    }
+
+    async function renderRMT() {
+        const tarikh = document.getElementById('tarikhRMT').value;
+        const stat = document.getElementById('statRMT');
+        const container = document.getElementById('listRMTTable');
+        stat.innerText = "Memuat data RMT...";
+        container.innerHTML = "";
+
+        const snapHadir = await db.ref('kehadiran/' + tarikh).once('value');
+        const dataHadir = snapHadir.val() || {};
+
+        let listRMT = databaseMurid.filter(m => m.rmt === true || m.rmt === "true");
+        
+        // Susunan Aliran (Tahun 1 -> 6)
+        listRMT.sort((a,b) => {
+            if (parseInt(a.tahun) !== parseInt(b.tahun)) return parseInt(a.tahun) - parseInt(b.tahun);
+            if (a.namaKelas !== b.namaKelas) return a.namaKelas.localeCompare(b.namaKelas);
+            return a.nama.localeCompare(b.nama);
+        });
+
+        let hadirCount = 0;
+        listRMT.forEach(m => {
+            const isHadir = dataHadir[m.uid] === true;
+            if(isHadir) hadirCount++;
+            const statusBg = isHadir ? 'var(--success)' : '#fee2e2';
+            const statusColor = isHadir ? 'white' : 'var(--danger)';
+            const statusTxt = isHadir ? 'DIAMBIL' : 'BELUM AMBIL';
+
+            container.innerHTML += `
+            <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
+                    <div style="font-size:0.75rem; color:#888; font-weight:600;">TAHUN ${m.tahun} ${m.namaKelas}</div>
+                </div>
+                <div style="background:${statusBg}; color:${statusColor}; padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:800;">
+                    ${statusTxt}
+                </div>
+            </div>`;
+        });
+
+        stat.innerHTML = `<div style="font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">LOG AMBILAN MAKANAN RMT</div>
+                          <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listRMT.length} Murid</div>`;
+    }
+
+    // --- REKOD DISIPLIN (PAPAR SAHAJA) ---
+    function bukaDisiplin() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'none';
+        document.getElementById('disiplinView').style.display = 'block';
+        renderDisiplinStats();
+    }
+
+    function renderDisiplinStats() {
+        const statContainer = document.getElementById('statKesalahanContainer');
+        const listContainer = document.getElementById('senaraiKesalahanContainer');
+        
+        let kiraanStats = {};
+        let rekodTerkini = [...databaseSalahLaku].reverse();
+
+        databaseSalahLaku.forEach(rekod => {
+            if(kiraanStats[rekod.kesalahan]) kiraanStats[rekod.kesalahan]++;
+            else kiraanStats[rekod.kesalahan] = 1;
+        });
+
+        if(Object.keys(kiraanStats).length === 0) {
+            statContainer.innerHTML = `<div style="text-align:center; color:#888;">Tiada sebarang rekod pelanggaran disiplin dikesan di sekolah.</div>`;
+        } else {
+            statContainer.innerHTML = "";
+            let keys = Object.keys(kiraanStats).sort((a,b) => kiraanStats[b] - kiraanStats[a]);
+            keys.forEach(k => {
+                statContainer.innerHTML += `
+                <div class="stat-row">
+                    <span style="flex:1;">${k}</span>
+                    <span class="stat-count">${kiraanStats[k]} kes</span>
+                </div>`;
+            });
+        }
+
+        listContainer.innerHTML = "";
+        if(rekodTerkini.length === 0) {
+            listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">Tiada rekod salah laku aktif murid.</div>`;
+        } else {
+            rekodTerkini.slice(0, 15).forEach(r => {
+                listContainer.innerHTML += `
+                <div class="murid-item" style="border-left: 4px solid var(--danger);">
+                    <div>
+                        <b style="font-size:0.9rem;">${r.nama}</b>
+                        <div style="font-size:0.75rem; color:#888;">Tahun ${r.tahun} ${r.kelas} | ${r.masa}</div>
+                    </div>
+                    <div style="background:#fff5f5; color:var(--danger); padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:600; margin-top:8px;">
+                        ⚠️ Kesalahan: ${r.kesalahan}
+                        ${r.catatan ? `<div style="font-weight:normal; font-size:0.75rem; color:#666; margin-top:3px;">Kenyataan: ${r.catatan}</div>` : ''}
+                    </div>
+                </div>`;
+            });
+        }
+    }
+
+    // --- RENDER MENU GRID KELAS ---
+    const grid = document.getElementById('gridKelas');
+    for(let t=1; t<=6; t++) {
+        ['DELIMA', 'ZAMRUD'].forEach(k => {
+            const btn = document.createElement('div');
+            btn.className = 'card-btn';
+            btn.innerText = `${t} ${k}`;
+            btn.onclick = () => {
+                curTahun = t; curKelas = k;
+                document.getElementById('menuFolder').style.display = 'none';
+                document.getElementById('senaraiView').style.display = 'block';
+                document.getElementById('labelKelas').innerText = `KEDUDUKAN TAHUN ${t} ${k}`;
+                reRenderSenarai();
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    // --- REALTIME DATA SYNCHRONIZATION ---
+    db.ref('pelajar').on('value', snap => {
+        const data = snap.val();
+        databaseMurid = [];
+        for(let key in data) { databaseMurid.push({uid: key, ...data[key]}); }
+        if(document.getElementById('senaraiView').style.display === 'block') reRenderSenarai();
+        if(document.getElementById('kehadiranView').style.display === 'block') renderKehadiran();
+        if(document.getElementById('rmtView').style.display === 'block') renderRMT();
+    });
+
+    db.ref('salahLaku').on('value', snap => {
+        const data = snap.val();
+        databaseSalahLaku = [];
+        for(let key in data) { databaseSalahLaku.push({id: key, ...data[key]}); }
+        if(document.getElementById('disiplinView').style.display === 'block') renderDisiplinStats();
+    });
+
+    function logikCarian(val) {
+        if(val) {
+            document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+            document.getElementById('menuFolder').style.display = 'none';
+            document.getElementById('senaraiView').style.display = 'block';
+            document.getElementById('labelKelas').innerText = "HASIL CARIAN MURID";
+            curTahun = null; 
+        } else {
+            kembali();
+        }
+        reRenderSenarai();
+    }
+
+    function reRenderSenarai() {
+        const searchVal = document.getElementById('cariUtama').value.toUpperCase();
+        let list = searchVal 
+            ? databaseMurid.filter(m => m.nama.includes(searchVal)) 
+            : databaseMurid.filter(m => m.tahun == curTahun && m.namaKelas == curKelas);
+            
+        const container = document.getElementById('muridContainer');
+        container.innerHTML = "";
+        
+        list.sort((a,b) => b.markah - a.markah).forEach((m, indeks) => {
+            const tagRMT = m.rmt ? `<span style="background:var(--rmt); color:white; font-size:0.6rem; padding:3px 6px; border-radius:5px; margin-left:5px;">RMT</span>` : '';
+            
+            container.innerHTML += `
+            <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <span style="font-weight:bold; color:var(--primary); font-size:0.85rem;">#${indeks + 1}</span>
+                    <b style="font-size:0.95rem; margin-left:5px;">${m.nama}</b> ${tagRMT}
+                    <div style="font-size:0.75rem; color:#888; margin-left:22px;">Tahun ${m.tahun} ${m.namaKelas}</div>
+                </div>
+                <span class="badge-skor">${m.markah || 0} Pts</span>
+            </div>`;
+        });
+        
+        if(list.length === 0) container.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">Tiada rekod sepadan ditemui.</div>`;
+    }
+</script>
+</body>
+</html>
