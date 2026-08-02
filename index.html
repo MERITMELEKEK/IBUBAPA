@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #4361ee; --success: #2ecc71; --danger: #ef476f; --dark: #2b2d42; --bg: #f8faff; --rmt: #ff9f43; --card: #ffffff; --purple: #7209b7; }
+        :root { --primary: #4361ee; --success: #2ecc71; --danger: #ef476f; --dark: #2b2d42; --bg: #f8faff; --rmt: #ff9f43; --card: #ffffff; --purple: #7209b7; --warning: #e67e22; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--dark); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         .top-bar { background: linear-gradient(135deg, #7209b7, #4361ee); color: white; padding: 30px 20px 45px 20px; border-radius: 0 0 35px 35px; text-align: center; box-shadow: 0 10px 20px rgba(114, 9, 183, 0.15); }
         .search-container { margin: -25px 20px 15px 20px; position: relative; z-index: 101; }
@@ -30,8 +30,6 @@
         .score-big { font-size: 3.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
         input[type="date"], select { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #eee; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
         .status-nfc-aktif { background: #e8f5e9; color: var(--success); padding: 8px; text-align: center; border-radius: 12px; font-size: 0.75rem; font-weight: bold; margin-bottom: 15px; border: 1px dashed var(--success); display: none; }
-        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; align-items: center; text-align: left;}
-        .stat-count { background: var(--danger); color: white; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -74,6 +72,7 @@
             <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN IMBASAN KAD ANAK</div>
             <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">📅 REKOD KEHADIRAN</div>
             <div class="card-btn" style="color:var(--rmt)" onclick="bukaRMT()">🍲 SEMAKAN RMT</div>
+            <div class="card-btn" style="color:var(--warning)" onclick="bukaKerjaRumah()">📚 KERJA RUMAH</div>
             <div class="card-btn card-full" style="color:var(--danger);" onclick="bukaDisiplin()">🚨 REKOD DISIPLIN (IMBAS KAD ANAK)</div>
         </div>
         
@@ -122,14 +121,46 @@
         <div id="listRMTTable"></div>
     </div>
 
-    <!-- View Disiplin (Papar Rekod Anak Sendiri Sahaja Melalui Imbasan NFC) -->
+    <!-- View Kerja Rumah -->
+    <div id="kerjaRumahView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
+            <h3 style="margin:0; color:var(--warning)">KERJA RUMAH & TUGASAN</h3>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <select id="selTahunHW" onchange="renderKerjaRumah()">
+                <option value="1">Tahun 1</option>
+                <option value="2">Tahun 2</option>
+                <option value="3">Tahun 3</option>
+                <option value="4">Tahun 4</option>
+                <option value="5">Tahun 5</option>
+                <option value="6">Tahun 6</option>
+            </select>
+            <select id="selKelasHW" onchange="renderKerjaRumah()">
+                <option value="DELIMA">DELIMA</option>
+                <option value="ZAMRUD">ZAMRUD</option>
+            </select>
+        </div>
+
+        <!-- Panel Ringkasan Subjek yang Ada Kerja Rumah -->
+        <div style="background: white; padding: 18px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;">
+                📌 Subjek Ada Kerja Rumah Diberi Guru:
+            </div>
+            <div id="ringkasanSubjekContainer" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+
+        <div id="senaraiKerjaRumahContainer"></div>
+    </div>
+
+    <!-- View Disiplin -->
     <div id="disiplinView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
             <h3 style="margin:0; color:var(--danger)">REKOD SALAH LAKU ANAK</h3>
         </div>
         
-        <!-- Status Permintaan Imbas NFC -->
         <div id="pemanduNfcDisiplin" style="background:white; padding:25px; border-radius:20px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom:20px; border: 2px dashed var(--danger);">
             <div style="font-size:45px; margin-bottom:10px;">💳</div>
             <h4 style="margin:0 0 10px 0; color:var(--danger);">SILA IMBAS KAD ANAK ANDA</h4>
@@ -159,8 +190,26 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
 
+    // --- SENARAI SUBJEK SEKOLAH KEBANGSAAN ---
+    const SENARAI_SUBJEK = [
+        { id: 'BM', nama: 'Bahasa Melayu', ikon: '📖' },
+        { id: 'BI', nama: 'Bahasa Inggeris', ikon: '🔤' },
+        { id: 'MT', nama: 'Matematik', ikon: '🔢' },
+        { id: 'SN', nama: 'Sains', ikon: '🔬' },
+        { id: 'PI', nama: 'Pendidikan Islam', ikon: '🕌' },
+        { id: 'BA', nama: 'Bahasa Arab', ikon: '🌙' },
+        { id: 'SEJ', nama: 'Sejarah', ikon: '📜' },
+        { id: 'RBT', nama: 'RBT', ikon: '🛠️' },
+        { id: 'PSV', nama: 'Seni Visual', ikon: '🎨' },
+        { id: 'MZ', nama: 'Muzik', ikon: '🎵' },
+        { id: 'PJK', nama: 'PJK', ikon: '⚽' }
+    ];
+
+    const TEMPOH_RESET_KR = 7 * 24 * 60 * 60 * 1000; // 7 Hari dalam milisaat
+
     let databaseMurid = [];
     let databaseSalahLaku = [];
+    let databaseKerjaRumah = {};
     let curTahun, curKelas;
     let nfcReaderInstance = null;
     let muridNfcSemasa = null;
@@ -195,7 +244,6 @@
             nfcReaderInstance.onreading = event => {
                 const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
                 
-                // Jika sedang berada dalam view Disiplin, terus papar rekod anak tersebut
                 if (document.getElementById('disiplinView').style.display === 'block') {
                     const m = databaseMurid.find(x => x.uid === uid);
                     if (m) {
@@ -363,19 +411,95 @@
                           <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listRMT.length} Murid</div>`;
     }
 
-    // --- REKOD DISIPLIN (HANYA ANAK SENDIRI MELALUI NFC) ---
+    // --- KERJA RUMAH & TUGASAN ---
+    function bukaKerjaRumah() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'none';
+        document.getElementById('kerjaRumahView').style.display = 'block';
+        renderKerjaRumah();
+    }
+
+    function renderKerjaRumah() {
+        const thn = document.getElementById('selTahunHW').value;
+        const kls = document.getElementById('selKelasHW').value;
+        const classKey = `${thn}_${kls}`;
+        const container = document.getElementById('senaraiKerjaRumahContainer');
+        const subjekRingkasanContainer = document.getElementById('ringkasanSubjekContainer');
+        
+        container.innerHTML = "";
+        subjekRingkasanContainer.innerHTML = "";
+
+        const dataKelasKR = databaseKerjaRumah[classKey] || {};
+        const masaKini = Date.now();
+        let senaraiAdaKR = [];
+
+        SENARAI_SUBJEK.forEach(sub => {
+            const dataSub = dataKelasKR[sub.id];
+            if(dataSub && dataSub.link) {
+                const masaSimpan = dataSub.timestamp || 0;
+                // Semakan tempoh luput 7 hari
+                if (masaKini - masaSimpan <= TEMPOH_RESET_KR) {
+                    senaraiAdaKR.push({
+                        ...sub,
+                        link: dataSub.link,
+                        timestamp: dataSub.timestamp
+                    });
+                }
+            }
+        });
+
+        if (senaraiAdaKR.length === 0) {
+            subjekRingkasanContainer.innerHTML = `<span style="font-size:0.85rem; color:#aaa; font-style:italic;">Tiada kerja rumah direkodkan untuk mana-mana subjek.</span>`;
+            container.innerHTML = `
+                <div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#888; border: 1px solid #eee;">
+                    📝 Tiada kerja rumah atau tugasan direkodkan untuk kelas ini.
+                </div>`;
+            return;
+        }
+
+        // Tunjukkan lencana subjek yang ada kerja rumah
+        senaraiAdaKR.forEach(item => {
+            subjekRingkasanContainer.innerHTML += `
+                <span style="background:var(--primary); color:white; padding:6px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; display:inline-block;">
+                    ${item.ikon} ${item.nama}
+                </span>`;
+        });
+
+        // Tunjukkan kad kerja rumah
+        senaraiAdaKR.forEach(item => {
+            const tarikhDiberi = item.timestamp 
+                ? new Date(item.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+                : '-';
+
+            container.innerHTML += `
+            <div class="murid-item" style="border-left: 5px solid var(--warning);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="background:var(--warning); color:white; font-size:0.75rem; padding:4px 10px; border-radius:8px; font-weight:bold; letter-spacing:0.5px;">
+                        ${item.ikon} ${item.nama.toUpperCase()}
+                    </span>
+                    <span style="font-size:0.75rem; color:#888; font-weight:600;">
+                        📅 Tarikh Diberi: ${tarikhDiberi}
+                    </span>
+                </div>
+                <h4 style="margin:8px 0 4px 0; font-size:1rem; color:var(--dark); font-weight:700;">Tugasan ${item.nama} (${thn} ${kls})</h4>
+                <a href="${item.link}" target="_blank" class="btn-aksi" style="display:block; background:var(--primary); text-decoration:none; text-align:center; margin-top:12px; box-sizing:border-box; color:white;">
+                    🔗 BUKA PAUTAN / BAHAN TUGASAN
+                </a>
+            </div>`;
+        });
+    }
+
+    // --- REKOD DISIPLIN ---
     function bukaDisiplin() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
         document.getElementById('disiplinView').style.display = 'block';
         
-        // Sembunyikan profil dan senarai sebelum kad diimbas
         document.getElementById('pemanduNfcDisiplin').style.display = 'block';
         document.getElementById('profilAnakDisiplin').style.display = 'none';
         document.getElementById('tajukLogAnak').style.display = 'none';
         document.getElementById('senaraiKesalahanContainer').innerHTML = "";
         
-        // Aktifkan NFC automatik jika belum diaktifkan
         if (!nfcReaderInstance && ('NDEFReader' in window)) {
             aktifkanNfcLatarBelakang();
         }
@@ -392,7 +516,6 @@
         const listContainer = document.getElementById('senaraiKesalahanContainer');
         listContainer.innerHTML = "";
 
-        // Tapis hanya rekod kepunyaan anak ini (berdasarkan UID atau Nama Murid)
         const rekodAnak = databaseSalahLaku.filter(r => r.uid === m.uid || (r.nama && r.nama.trim().toUpperCase() === m.nama.trim().toUpperCase())).reverse();
 
         if(rekodAnak.length === 0) {
@@ -448,9 +571,15 @@
         const data = snap.val();
         databaseSalahLaku = [];
         for(let key in data) { databaseSalahLaku.push({id: key, ...data[key]}); }
-        // Semak semula paparan disiplin jika anak sedang dipaparkan
         if(document.getElementById('disiplinView').style.display === 'block' && muridNfcSemasa) {
             paparDisiplinAnak(muridNfcSemasa);
+        }
+    });
+
+    db.ref('kerjaRumah').on('value', snap => {
+        databaseKerjaRumah = snap.val() || {};
+        if(document.getElementById('kerjaRumahView').style.display === 'block') {
+            renderKerjaRumah();
         }
     });
 
