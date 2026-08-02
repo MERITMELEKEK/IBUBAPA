@@ -52,7 +52,8 @@
             ⚠️ Kad pintar ini belum didaftarkan oleh pihak sekolah. Sila hubungi guru kelas.
         </div>
         
-        <button class="btn-aksi" style="background:#eee; color:var(--dark); width:100%; margin-top:15px;" onclick="tutupPopupNfcGlobal()">TUTUP SEMAKAN</button>
+        <button id="btnLihatDisiplinAnak" class="btn-aksi" style="background:var(--danger); color:white; width:100%; margin-top:15px; display:none;" onclick="lihatDisiplinDariPopup()">🚨 LIHAT REKOD DISIPLIN ANAK</button>
+        <button class="btn-aksi" style="background:#eee; color:var(--dark); width:100%; margin-top:10px;" onclick="tutupPopupNfcGlobal()">TUTUP SEMAKAN</button>
     </div>
 </div>
 
@@ -73,7 +74,7 @@
             <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN IMBASAN KAD ANAK</div>
             <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">📅 REKOD KEHADIRAN</div>
             <div class="card-btn" style="color:var(--rmt)" onclick="bukaRMT()">🍲 SEMAKAN RMT</div>
-            <div class="card-btn card-full" style="color:var(--danger);" onclick="bukaDisiplin()">🚨 REKOD DISIPLIN SEKOLAH</div>
+            <div class="card-btn card-full" style="color:var(--danger);" onclick="bukaDisiplin()">🚨 REKOD DISIPLIN (IMBAS KAD ANAK)</div>
         </div>
         
         <div class="section-title">Kedudukan Merit Ikut Kelas</div>
@@ -121,17 +122,28 @@
         <div id="listRMTTable"></div>
     </div>
 
-    <!-- View Disiplin (Papar Sahaja) -->
+    <!-- View Disiplin (Papar Rekod Anak Sendiri Sahaja Melalui Imbasan NFC) -->
     <div id="disiplinView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 style="margin:0; color:var(--danger)">REKOD SALAH LAKU KESELURUHANN</h3>
+            <h3 style="margin:0; color:var(--danger)">REKOD SALAH LAKU ANAK</h3>
         </div>
         
-        <div class="section-title" style="color:var(--danger)">Statistik Kesalahan Semasa Sekolah</div>
-        <div style="background:white; padding:20px; border-radius:20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); margin-bottom: 20px;" id="statKesalahanContainer"></div>
+        <!-- Status Permintaan Imbas NFC -->
+        <div id="pemanduNfcDisiplin" style="background:white; padding:25px; border-radius:20px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom:20px; border: 2px dashed var(--danger);">
+            <div style="font-size:45px; margin-bottom:10px;">💳</div>
+            <h4 style="margin:0 0 10px 0; color:var(--danger);">SILA IMBAS KAD ANAK ANDA</h4>
+            <p style="font-size:0.85rem; color:#666; margin:0 0 15px 0;">Demi privasi, rekod salah laku murid hanya akan dipaparkan apabila kad pintar anak anda disentuh pada belakang telefon ini.</p>
+            <button class="btn-aksi" style="background:var(--purple); width:100%;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN PENDERIA NFC SEKARANG</button>
+        </div>
 
-        <div class="section-title">Log Tindakan Disiplin Terkini Murid</div>
+        <div id="profilAnakDisiplin" style="display:none; background:var(--dark); color:white; padding:20px; border-radius:20px; margin-bottom:20px; text-align:center;">
+            <div style="font-size:0.8rem; opacity:0.8;">REKOD INDIVIDU MURID</div>
+            <h3 id="disiplinNamaAnak" style="margin:5px 0 0 0;">-</h3>
+            <p id="disiplinKelasAnak" style="margin:0; font-size:0.85rem; color:#ccc;">-</p>
+        </div>
+
+        <div class="section-title" id="tajukLogAnak" style="display:none;">Log Pelanggaran Disiplin</div>
         <div id="senaraiKesalahanContainer"></div>
     </div>
 </div>
@@ -151,6 +163,7 @@
     let databaseSalahLaku = [];
     let curTahun, curKelas;
     let nfcReaderInstance = null;
+    let muridNfcSemasa = null;
 
     function getTarikhHariIni() {
         const d = new Date();
@@ -181,7 +194,18 @@
 
             nfcReaderInstance.onreading = event => {
                 const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
-                paparMaklumatKadAnak(uid);
+                
+                // Jika sedang berada dalam view Disiplin, terus papar rekod anak tersebut
+                if (document.getElementById('disiplinView').style.display === 'block') {
+                    const m = databaseMurid.find(x => x.uid === uid);
+                    if (m) {
+                        paparDisiplinAnak(m);
+                    } else {
+                        alert("Kad NFC tidak didaftarkan dalam sistem.");
+                    }
+                } else {
+                    paparMaklumatKadAnak(uid);
+                }
             };
         } catch(e) {
             alert("Akses NFC ditolak. Sila benarkan kebenaran peranti.");
@@ -195,18 +219,32 @@
         document.getElementById('popupNfcGlobal').style.display = 'flex';
 
         if(m) {
+            muridNfcSemasa = m;
             document.getElementById('gNfcIcon').innerText = "💳";
             document.getElementById('gNfcNama').innerText = m.nama;
             document.getElementById('gNfcKelas').innerText = `Tahun ${m.tahun} ${m.namaKelas}`;
             document.getElementById('gNfcSkorDisplay').innerText = m.markah || 0;
             document.getElementById('gNfcScoreBox').style.display = 'block';
             document.getElementById('gNfcRalat').style.display = 'none';
+            document.getElementById('btnLihatDisiplinAnak').style.display = 'block';
         } else {
+            muridNfcSemasa = null;
             document.getElementById('gNfcIcon').innerText = "❌";
             document.getElementById('gNfcNama').innerText = "KAD TIDAK DIKENALI";
             document.getElementById('gNfcKelas').innerText = "UID: " + uid;
             document.getElementById('gNfcScoreBox').style.display = 'none';
             document.getElementById('gNfcRalat').style.display = 'block';
+            document.getElementById('btnLihatDisiplinAnak').style.display = 'none';
+        }
+    }
+
+    function lihatDisiplinDariPopup() {
+        tutupPopupNfcGlobal();
+        if (muridNfcSemasa) {
+            document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+            document.getElementById('menuFolder').style.display = 'none';
+            document.getElementById('disiplinView').style.display = 'block';
+            paparDisiplinAnak(muridNfcSemasa);
         }
     }
 
@@ -295,7 +333,6 @@
 
         let listRMT = databaseMurid.filter(m => m.rmt === true || m.rmt === "true");
         
-        // Susunan Aliran (Tahun 1 -> 6)
         listRMT.sort((a,b) => {
             if (parseInt(a.tahun) !== parseInt(b.tahun)) return parseInt(a.tahun) - parseInt(b.tahun);
             if (a.namaKelas !== b.namaKelas) return a.namaKelas.localeCompare(b.namaKelas);
@@ -326,54 +363,53 @@
                           <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listRMT.length} Murid</div>`;
     }
 
-    // --- REKOD DISIPLIN (PAPAR SAHAJA) ---
+    // --- REKOD DISIPLIN (HANYA ANAK SENDIRI MELALUI NFC) ---
     function bukaDisiplin() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
         document.getElementById('disiplinView').style.display = 'block';
-        renderDisiplinStats();
+        
+        // Sembunyikan profil dan senarai sebelum kad diimbas
+        document.getElementById('pemanduNfcDisiplin').style.display = 'block';
+        document.getElementById('profilAnakDisiplin').style.display = 'none';
+        document.getElementById('tajukLogAnak').style.display = 'none';
+        document.getElementById('senaraiKesalahanContainer').innerHTML = "";
+        
+        // Aktifkan NFC automatik jika belum diaktifkan
+        if (!nfcReaderInstance && ('NDEFReader' in window)) {
+            aktifkanNfcLatarBelakang();
+        }
     }
 
-    function renderDisiplinStats() {
-        const statContainer = document.getElementById('statKesalahanContainer');
+    function paparDisiplinAnak(m) {
+        document.getElementById('pemanduNfcDisiplin').style.display = 'none';
+        document.getElementById('profilAnakDisiplin').style.display = 'block';
+        document.getElementById('tajukLogAnak').style.display = 'block';
+
+        document.getElementById('disiplinNamaAnak').innerText = m.nama;
+        document.getElementById('disiplinKelasAnak').innerText = `Tahun ${m.tahun} ${m.namaKelas}`;
+
         const listContainer = document.getElementById('senaraiKesalahanContainer');
-        
-        let kiraanStats = {};
-        let rekodTerkini = [...databaseSalahLaku].reverse();
-
-        databaseSalahLaku.forEach(rekod => {
-            if(kiraanStats[rekod.kesalahan]) kiraanStats[rekod.kesalahan]++;
-            else kiraanStats[rekod.kesalahan] = 1;
-        });
-
-        if(Object.keys(kiraanStats).length === 0) {
-            statContainer.innerHTML = `<div style="text-align:center; color:#888;">Tiada sebarang rekod pelanggaran disiplin dikesan di sekolah.</div>`;
-        } else {
-            statContainer.innerHTML = "";
-            let keys = Object.keys(kiraanStats).sort((a,b) => kiraanStats[b] - kiraanStats[a]);
-            keys.forEach(k => {
-                statContainer.innerHTML += `
-                <div class="stat-row">
-                    <span style="flex:1;">${k}</span>
-                    <span class="stat-count">${kiraanStats[k]} kes</span>
-                </div>`;
-            });
-        }
-
         listContainer.innerHTML = "";
-        if(rekodTerkini.length === 0) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">Tiada rekod salah laku aktif murid.</div>`;
+
+        // Tapis hanya rekod kepunyaan anak ini (berdasarkan UID atau Nama Murid)
+        const rekodAnak = databaseSalahLaku.filter(r => r.uid === m.uid || (r.nama && r.nama.trim().toUpperCase() === m.nama.trim().toUpperCase())).reverse();
+
+        if(rekodAnak.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#2ecc71; font-weight:bold; border: 1px solid #eee;">
+                    🎉 Tahniah! Tiada sebarang rekod salah laku atau pelanggaran disiplin dicatatkan untuk anak anda.
+                </div>`;
         } else {
-            rekodTerkini.slice(0, 15).forEach(r => {
+            rekodAnak.forEach(r => {
                 listContainer.innerHTML += `
                 <div class="murid-item" style="border-left: 4px solid var(--danger);">
                     <div>
-                        <b style="font-size:0.9rem;">${r.nama}</b>
-                        <div style="font-size:0.75rem; color:#888;">Tahun ${r.tahun} ${r.kelas} | ${r.masa}</div>
+                        <b style="font-size:0.9rem;">${r.kesalahan}</b>
+                        <div style="font-size:0.75rem; color:#888;">Tarikh / Masa: ${r.masa || '-'}</div>
                     </div>
                     <div style="background:#fff5f5; color:var(--danger); padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:600; margin-top:8px;">
-                        ⚠️ Kesalahan: ${r.kesalahan}
-                        ${r.catatan ? `<div style="font-weight:normal; font-size:0.75rem; color:#666; margin-top:3px;">Kenyataan: ${r.catatan}</div>` : ''}
+                        ⚠️ Tindakan / Catatan: ${r.catatan || 'Tiada catatan tambahan'}
                     </div>
                 </div>`;
             });
@@ -412,7 +448,10 @@
         const data = snap.val();
         databaseSalahLaku = [];
         for(let key in data) { databaseSalahLaku.push({id: key, ...data[key]}); }
-        if(document.getElementById('disiplinView').style.display === 'block') renderDisiplinStats();
+        // Semak semula paparan disiplin jika anak sedang dipaparkan
+        if(document.getElementById('disiplinView').style.display === 'block' && muridNfcSemasa) {
+            paparDisiplinAnak(muridNfcSemasa);
+        }
     });
 
     function logikCarian(val) {
