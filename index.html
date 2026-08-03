@@ -8,83 +8,302 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #4361ee; --success: #2ecc71; --danger: #ef476f; --dark: #2b2d42; --bg: #f8faff; --rmt: #ff9f43; --card: #ffffff; --purple: #7209b7; --warning: #e67e22; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--dark); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-        .top-bar { background: linear-gradient(135deg, #7209b7, #4361ee); color: white; padding: 30px 20px 45px 20px; border-radius: 0 0 35px 35px; text-align: center; box-shadow: 0 10px 20px rgba(114, 9, 183, 0.15); }
-        .search-container { margin: -25px 20px 15px 20px; position: relative; z-index: 101; }
-        #cariUtama, .input-carian { width: 100%; padding: 18px 25px; border-radius: 20px; border: none; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 1rem; outline: none; box-sizing: border-box; }
+        :root { 
+            --primary: #4361ee; 
+            --primary-dark: #3f37c9;
+            --success: #2ecc71; 
+            --danger: #ef476f; 
+            --dark: #1e293b; 
+            --bg: #f1f5f9; 
+            --rmt: #ff9f43; 
+            --card: #ffffff; 
+            --purple: #7209b7; 
+            --warning: #e67e22; 
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--dark); 
+            -webkit-font-smoothing: antialiased; 
+            overflow-x: hidden; 
+        }
+
+        /* Top Header */
+        .top-bar { 
+            background: linear-gradient(135deg, #7209b7, #4361ee); 
+            color: white; 
+            padding: 35px 20px 50px 20px; 
+            border-radius: 0 0 35px 35px; 
+            text-align: center; 
+            box-shadow: 0 10px 25px rgba(114, 9, 183, 0.2); 
+        }
+        .top-bar h2 { margin: 0; font-size: 1.5rem; letter-spacing: 0.5px; }
+        .top-bar p { margin: 5px 0 0 0; opacity: 0.85; font-size: 0.8rem; font-weight: 500; }
+
+        /* Search Section */
+        .search-container { 
+            margin: -25px 20px 20px 20px; 
+            position: relative; 
+            z-index: 101; 
+        }
+        #cariUtama { 
+            width: 100%; 
+            padding: 18px 22px; 
+            border-radius: 20px; 
+            border: none; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06); 
+            font-size: 0.95rem; 
+            outline: none; 
+            box-sizing: border-box; 
+            font-family: inherit;
+        }
+
         .content { padding: 0 20px 100px 20px; }
-        .section-title { font-size: 0.8rem; font-weight: 700; color: #a0a0a0; margin: 25px 0 12px 5px; text-transform: uppercase; letter-spacing: 1.2px; }
-        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card-btn { background: var(--card); padding: 22px 15px; border-radius: 24px; text-align: center; font-weight: 700; color: var(--primary); box-shadow: 0 8px 15px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid rgba(0,0,0,0.02); transition: transform 0.1s ease; }
-        .card-full { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .section-title { 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            color: #64748b; 
+            margin: 20px 0 12px 5px; 
+            text-transform: uppercase; 
+            letter-spacing: 1.2px; 
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Grid Menus */
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card-btn { 
+            background: var(--card); 
+            padding: 18px 12px; 
+            border-radius: 20px; 
+            text-align: center; 
+            font-weight: 700; 
+            font-size: 0.85rem;
+            color: var(--dark); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            cursor: pointer; 
+            border: 1px solid #e2e8f0; 
+            transition: all 0.2s ease; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .card-btn:active { transform: scale(0.97); }
+        .card-btn .btn-icon { font-size: 1.6rem; }
+        .card-full { grid-column: span 2; flex-direction: row; gap: 12px; padding: 16px; }
+
         .view-section { display: none; }
-        .murid-item { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); border: 1px solid #eee; }
-        .btn-aksi { padding: 14px; border: none; border-radius: 15px; color: white; font-weight: 700; flex: 1; cursor: pointer; font-size: 0.85rem; transition: transform 0.1s ease; }
-        .badge-skor { background: var(--dark); color: white; padding: 8px 15px; border-radius: 12px; font-weight: 800; }
+        .murid-item { 
+            background: var(--card); 
+            padding: 18px; 
+            border-radius: 20px; 
+            margin-bottom: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+            border: 1px solid #e2e8f0; 
+        }
+
+        .btn-aksi { 
+            padding: 14px; 
+            border: none; 
+            border-radius: 15px; 
+            color: white; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 0.85rem; 
+            width: 100%;
+            display: inline-block;
+            box-sizing: border-box;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .badge-skor { 
+            background: var(--primary); 
+            color: white; 
+            padding: 6px 14px; 
+            border-radius: 12px; 
+            font-weight: 800; 
+            font-size: 0.85rem;
+        }
+
+        /* Modal NFC Popup */
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.7); 
+            backdrop-filter: blur(6px); 
+            z-index: 5000; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+        .modal { 
+            background: white; 
+            width: 100%; 
+            max-width: 420px; 
+            border-radius: 30px; 
+            padding: 25px; 
+            text-align: center; 
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            max-height: 85vh; 
+            overflow-y: auto; 
+            box-sizing: border-box; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
         
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 5000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal { background: white; width: 100%; max-width: 400px; border-radius: 35px; padding: 30px; text-align: center; animation: slideUp 0.3s ease-out; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
-        
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .score-big { font-size: 3.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
-        input[type="date"], select { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #eee; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
-        .status-nfc-aktif { background: #e8f5e9; color: var(--success); padding: 8px; text-align: center; border-radius: 12px; font-size: 0.75rem; font-weight: bold; margin-bottom: 15px; border: 1px dashed var(--success); display: none; }
+        @keyframes slideUp { 
+            from { transform: translateY(50px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+
+        .score-big { 
+            font-size: 3rem; 
+            font-weight: 800; 
+            color: var(--primary); 
+            margin: 5px 0; 
+        }
+
+        input[type="date"], select { 
+            width: 100%; 
+            padding: 14px 18px; 
+            border-radius: 16px; 
+            border: 1px solid #cbd5e1; 
+            margin-bottom: 12px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 0.9rem; 
+            outline: none;
+            background: white;
+        }
+
+        .status-nfc-aktif { 
+            background: #dcfce7; 
+            color: #15803d; 
+            padding: 10px; 
+            text-align: center; 
+            border-radius: 14px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-bottom: 12px; 
+            border: 1px dashed #22c55e; 
+            display: none; 
+        }
+
+        /* Class Selection Card Style */
+        .kelas-card {
+            background: white;
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .kelas-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+        .homework-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #eff6ff;
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-<!-- Popup Global Semakan Kad Anak (NFC) -->
+<!-- POPUP GLOBAL: SEMAKAN KAD MURID (NFC) -->
 <div id="popupNfcGlobal" class="overlay">
     <div class="modal" id="modalNfc">
-        <div id="gNfcIcon" style="font-size: 50px; margin-bottom: 10px;">💳</div>
-        <h3 id="gNfcNama" style="margin-bottom:5px;">NAMA MURID</h3>
-        <p id="gNfcKelas" style="margin-top:0; color:#888; font-size:0.85rem;">Tahun / Kelas</p>
+        <div id="gNfcIcon" style="font-size: 45px; margin-bottom: 5px;">💳</div>
+        <h3 id="gNfcNama" style="margin: 0 0 5px 0; font-size: 1.2rem;">NAMA MURID</h3>
+        <p id="gNfcKelas" style="margin: 0 0 15px 0; color: #64748b; font-size: 0.85rem; font-weight: 600;">Tahun / Kelas</p>
         
-        <div id="gNfcScoreBox">
-            <p style="margin: 5px 0 0 0; font-size: 0.8rem; color:#666; font-weight: 600;">JUMLAH MARKAH MERIT SEMASA</p>
+        <!-- Seksyen Skor Merit -->
+        <div id="gNfcScoreBox" style="background:#f8fafc; padding:15px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:15px;">
+            <p style="margin: 0; font-size: 0.75rem; color:#64748b; font-weight: 700; text-transform:uppercase;">JUMLAH MARKAH MERIT</p>
             <div class="score-big" id="gNfcSkorDisplay">0</div>
+        </div>
+
+        <!-- Seksyen Kerja Rumah Murid (Muncul jika ada) -->
+        <div id="gNfcHomeworkBox" style="display:none; text-align:left; background:#fffbe8; border:1px solid #fce38a; padding:15px; border-radius:20px; margin-bottom:15px;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #d97706; margin-bottom: 8px; display:flex; align-items:center; gap:5px;">
+                📚 KERJA RUMAH DIBERI HARI INI:
+            </div>
+            <div id="gNfcHomeworkList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
         
         <div id="gNfcRalat" style="display:none; color:var(--danger); font-weight:bold; margin: 15px 0; font-size: 0.9rem;">
-            ⚠️ Kad pintar ini belum didaftarkan oleh pihak sekolah. Sila hubungi guru kelas.
+            ⚠️ Kad pintar ini belum didaftarkan. Sila hubungi pihak sekolah.
         </div>
         
-        <button id="btnLihatDisiplinAnak" class="btn-aksi" style="background:var(--danger); color:white; width:100%; margin-top:15px; display:none;" onclick="lihatDisiplinDariPopup()">🚨 LIHAT REKOD DISIPLIN ANAK</button>
-        <button class="btn-aksi" style="background:#eee; color:var(--dark); width:100%; margin-top:10px;" onclick="tutupPopupNfcGlobal()">TUTUP SEMAKAN</button>
+        <button id="btnLihatDisiplinAnak" class="btn-aksi" style="background:var(--danger); color:white; margin-bottom:8px; display:none;" onclick="lihatDisiplinDariPopup()">🚨 REKOD DISIPLIN ANAK</button>
+        <button class="btn-aksi" style="background:#e2e8f0; color:var(--dark);" onclick="tutupPopupNfcGlobal()">TUTUP SEMAKAN</button>
     </div>
 </div>
 
+<!-- Header -->
 <div class="top-bar">
     <h2>PORTAL IBU BAPA</h2>
-    <p style="margin:0; opacity:0.8; font-size:0.8rem;">SK MELEKEK • Semakan Merit & Sahsiah</p>
+    <p>SK MELEKEK • Semakan Merit, Kehadiran & Tugasan</p>
 </div>
 
+<!-- Carian Utama -->
 <div class="search-container">
-    <div id="nfcStatusIndicator" class="status-nfc-aktif">📡 ANTENNA NFC WARIS DIHIDUPKAN (SILA RAPATKAN KAD ANAK PADA PERANTI)</div>
-    <input type="text" id="cariUtama" placeholder="🔍 Cari nama anak / murid untuk semakan..." oninput="logikCarian(this.value)">
+    <div id="nfcStatusIndicator" class="status-nfc-aktif">📡 NFC AKTIF: DEPAKAN KAD PADA PERANTI UNTUK SEMAKAN PANTAS</div>
+    <input type="text" id="cariUtama" placeholder="🔍 Cari nama anak untuk semakan pantas..." oninput="logikCarian(this.value)">
 </div>
 
 <div class="content">
     <div id="menuFolder">
-        <div class="section-title">Semakan Pantas Peranti</div>
+        <div class="section-title">📌 Pilihan Utama</div>
         <div class="grid-menu">
-            <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN IMBASAN KAD ANAK</div>
-            <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">📅 REKOD KEHADIRAN</div>
-            <div class="card-btn" style="color:var(--rmt)" onclick="bukaRMT()">🍲 SEMAKAN RMT</div>
-            <div class="card-btn" style="color:var(--warning)" onclick="bukaKerjaRumah()">📚 KERJA RUMAH</div>
-            <div class="card-btn card-full" style="color:var(--danger);" onclick="bukaDisiplin()">🚨 REKOD DISIPLIN (IMBAS KAD ANAK)</div>
+            <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">
+                <span class="btn-icon">📡</span> 
+                <span>AKTIFKAN IMBASAN KAD ANAK (NFC)</span>
+            </div>
+            <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">
+                <span class="btn-icon">📅</span>
+                <span>REKOD KEHADIRAN</span>
+            </div>
+            <div class="card-btn" style="color:var(--rmt)" onclick="bukaRMT()">
+                <span class="btn-icon">🍲</span>
+                <span>SEMAKAN RMT</span>
+            </div>
+            <div class="card-btn" style="color:var(--warning)" onclick="bukaKerjaRumah()">
+                <span class="btn-icon">📚</span>
+                <span>KERJA RUMAH</span>
+            </div>
+            <div class="card-btn" style="color:var(--danger);" onclick="bukaDisiplin()">
+                <span class="btn-icon">🚨</span>
+                <span>REKOD DISIPLIN</span>
+            </div>
         </div>
         
-        <div class="section-title">Kedudukan Merit Ikut Kelas</div>
+        <div class="section-title">🏆 Kedudukan Merit Mengikut Kelas</div>
         <div id="gridKelas" class="grid-menu"></div>
     </div>
 
     <!-- View Senarai Kelas/Carian -->
     <div id="senaraiView" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 id="labelKelas" style="margin:0;">SENARAI MURID</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 id="labelKelas" style="margin:0; font-size:1.1rem;">SENARAI MURID</h3>
         </div>
         <div id="muridContainer"></div>
     </div>
@@ -92,8 +311,8 @@
     <!-- View Kehadiran -->
     <div id="kehadiranView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 style="margin:0;">LOG KEHADIRAN</h3>
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 style="margin:0; font-size:1.1rem;">LOG KEHADIRAN</h3>
         </div>
         <div id="statHadir" style="background:var(--dark); color:white; padding:15px; border-radius:20px; margin-bottom:15px; text-align:center;">Sila tunggu...</div>
         <input type="date" id="tarikhHadir" onchange="renderKehadiran()">
@@ -113,68 +332,66 @@
     <!-- View Kehadiran RMT -->
     <div id="rmtView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 style="margin:0;">SENARAI RMT HARI INI</h3>
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 style="margin:0; font-size:1.1rem;">SENARAI RMT HARI INI</h3>
         </div>
-        <div id="statRMT" style="background:var(--rmt); color:white; padding:20px; border-radius:20px; margin-bottom:15px; text-align:center;">Sila tunggu...</div>
+        <div id="statRMT" style="background:var(--rmt); color:white; padding:18px; border-radius:20px; margin-bottom:15px; text-align:center;">Sila tunggu...</div>
         <input type="date" id="tarikhRMT" onchange="renderRMT()">
         <div id="listRMTTable"></div>
     </div>
 
-    <!-- View Kerja Rumah -->
+    <!-- View Kerja Rumah (PILIH KELAS DAHULU) -->
     <div id="kerjaRumahView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 style="margin:0; color:var(--warning)">KERJA RUMAH & TUGASAN</h3>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <select id="selTahunHW" onchange="renderKerjaRumah()">
-                <option value="1">Tahun 1</option>
-                <option value="2">Tahun 2</option>
-                <option value="3">Tahun 3</option>
-                <option value="4">Tahun 4</option>
-                <option value="5">Tahun 5</option>
-                <option value="6">Tahun 6</option>
-            </select>
-            <select id="selKelasHW" onchange="renderKerjaRumah()">
-                <option value="DELIMA">DELIMA</option>
-                <option value="ZAMRUD">ZAMRUD</option>
-            </select>
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembaliPilihKelasHW()">⬅️ Pilih Kelas</button>
+            <h3 style="margin:0; color:var(--warning); font-size:1.1rem;">KERJA RUMAH & TUGASAN</h3>
         </div>
 
-        <!-- Panel Ringkasan Subjek yang Ada Kerja Rumah -->
-        <div style="background: white; padding: 18px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;">
-                📌 Subjek Ada Kerja Rumah Diberi Guru:
+        <!-- Langkah 1: Pilih Kelas -->
+        <div id="panelPilihKelasHW">
+            <div class="section-title">🏫 Sila Pilih Kelas Anak Anda:</div>
+            <div id="gridPilihKelasHW" class="grid-menu"></div>
+        </div>
+
+        <!-- Langkah 2: Paparan Kerja Rumah Mengikut Kelas -->
+        <div id="panelTugasanHW" style="display:none;">
+            <div id="papanInfoKelasHW" style="background: var(--dark); color: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; text-align: center; font-weight: 700;">
+                -
             </div>
-            <div id="ringkasanSubjekContainer" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-        </div>
 
-        <div id="senaraiKerjaRumahContainer"></div>
+            <!-- Ringkasan Subjek Yang Terdapat Kerja Rumah -->
+            <div style="background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">
+                    📌 Subjek Yang Ada Kerja Rumah Aktif:
+                </div>
+                <div id="ringkasanSubjekContainer" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+
+            <div id="senaraiKerjaRumahContainer"></div>
+        </div>
     </div>
 
     <!-- View Disiplin -->
     <div id="disiplinView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-aksi" style="background:var(--dark); max-width:50px; padding:10px;" onclick="kembali()">⬅️</button>
-            <h3 style="margin:0; color:var(--danger)">REKOD SALAH LAKU ANAK</h3>
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 style="margin:0; color:var(--danger); font-size:1.1rem;">REKOD SALAH LAKU</h3>
         </div>
         
-        <div id="pemanduNfcDisiplin" style="background:white; padding:25px; border-radius:20px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom:20px; border: 2px dashed var(--danger);">
+        <div id="pemanduNfcDisiplin" style="background:white; padding:25px; border-radius:20px; text-align:center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom:20px; border: 2px dashed var(--danger);">
             <div style="font-size:45px; margin-bottom:10px;">💳</div>
-            <h4 style="margin:0 0 10px 0; color:var(--danger);">SILA IMBAS KAD ANAK ANDA</h4>
-            <p style="font-size:0.85rem; color:#666; margin:0 0 15px 0;">Demi privasi, rekod salah laku murid hanya akan dipaparkan apabila kad pintar anak anda disentuh pada belakang telefon ini.</p>
-            <button class="btn-aksi" style="background:var(--purple); width:100%;" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN PENDERIA NFC SEKARANG</button>
+            <h4 style="margin:0 0 8px 0; color:var(--danger);">IMBAS KAD PINTAR ANAK</h4>
+            <p style="font-size:0.8rem; color:#64748b; margin:0 0 15px 0;">Sila sentuh kad murid pada belakang telefon ini untuk melihat rekod disiplin individu.</p>
+            <button class="btn-aksi" style="background:var(--purple);" onclick="aktifkanNfcLatarBelakang()">📡 AKTIFKAN PENDERIA NFC</button>
         </div>
 
-        <div id="profilAnakDisiplin" style="display:none; background:var(--dark); color:white; padding:20px; border-radius:20px; margin-bottom:20px; text-align:center;">
-            <div style="font-size:0.8rem; opacity:0.8;">REKOD INDIVIDU MURID</div>
-            <h3 id="disiplinNamaAnak" style="margin:5px 0 0 0;">-</h3>
-            <p id="disiplinKelasAnak" style="margin:0; font-size:0.85rem; color:#ccc;">-</p>
+        <div id="profilAnakDisiplin" style="display:none; background:var(--dark); color:white; padding:18px; border-radius:20px; margin-bottom:20px; text-align:center;">
+            <div style="font-size:0.75rem; opacity:0.8; text-transform:uppercase;">Rekod Individu Murid</div>
+            <h3 id="disiplinNamaAnak" style="margin:4px 0 0 0;">-</h3>
+            <p id="disiplinKelasAnak" style="margin:0; font-size:0.85rem; color:#cbd5e1;">-</p>
         </div>
 
-        <div class="section-title" id="tajukLogAnak" style="display:none;">Log Pelanggaran Disiplin</div>
+        <div class="section-title" id="tajukLogAnak" style="display:none;">Log Rekod Salah Laku</div>
         <div id="senaraiKesalahanContainer"></div>
     </div>
 </div>
@@ -211,6 +428,7 @@
     let databaseSalahLaku = [];
     let databaseKerjaRumah = {};
     let curTahun, curKelas;
+    let selectedHwTahun = null, selectedHwKelas = null;
     let nfcReaderInstance = null;
     let muridNfcSemasa = null;
 
@@ -224,11 +442,11 @@
     // --- INTEGRASI NFC GLOBAL UNTUK IBU BAPA ---
     async function aktifkanNfcLatarBelakang() {
         if (!('NDEFReader' in window)) {
-            alert("Peranti atau pelayar web anda tidak mempunyai penderia imbasan NFC.");
+            alert("Peranti/pelayar web anda tidak mempunyai penderia imbasan NFC.");
             return;
         }
         if (nfcReaderInstance) {
-            alert("Penderia NFC sedia diaktifkan secara latar belakang.");
+            alert("Penderia NFC sedia diaktifkan.");
             return;
         }
 
@@ -238,8 +456,8 @@
             
             document.getElementById('nfcStatusIndicator').style.display = 'block';
             document.getElementById('btnAktifNfc').style.background = '#2ecc71';
-            document.getElementById('btnAktifNfc').innerText = "✅ NFC WARIS AKTIF";
-            alert("Sistem sedia menerima imbasan kad anak anda!");
+            document.getElementById('btnAktifNfc').innerHTML = '<span class="btn-icon">✅</span><span>NFC WARIS AKTIF</span>';
+            alert("Sedia menerima imbasan kad pintar murid!");
 
             nfcReaderInstance.onreading = event => {
                 const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
@@ -249,19 +467,19 @@
                     if (m) {
                         paparDisiplinAnak(m);
                     } else {
-                        alert("Kad NFC tidak didaftarkan dalam sistem.");
+                        alert("Kad NFC ini belum didaftarkan.");
                     }
                 } else {
                     paparMaklumatKadAnak(uid);
                 }
             };
         } catch(e) {
-            alert("Akses NFC ditolak. Sila benarkan kebenaran peranti.");
+            alert("Akses NFC ditolak atau tidak diizinkan oleh peranti.");
             nfcReaderInstance = null;
         }
     }
 
-    // --- POPUP SEMAKAN REAL-TIME ANAK ---
+    // --- POPUP SEMAKAN NFC (MARKAH MERIT & KERJA RUMAH) ---
     function paparMaklumatKadAnak(uid) {
         const m = databaseMurid.find(x => x.uid === uid);
         document.getElementById('popupNfcGlobal').style.display = 'flex';
@@ -274,13 +492,47 @@
             document.getElementById('gNfcSkorDisplay').innerText = m.markah || 0;
             document.getElementById('gNfcScoreBox').style.display = 'block';
             document.getElementById('gNfcRalat').style.display = 'none';
-            document.getElementById('btnLihatDisiplinAnak').style.display = 'block';
+
+            // Semak Kerja Rumah Kelas Anak
+            const classKey = `${m.tahun}_${m.namaKelas}`;
+            const dataKelasKR = databaseKerjaRumah[classKey] || {};
+            const masaKini = Date.now();
+            let hwListHtml = "";
+            let hwCount = 0;
+
+            SENARAI_SUBJEK.forEach(sub => {
+                const dataSub = dataKelasKR[sub.id];
+                if(dataSub && dataSub.link) {
+                    const masaSimpan = dataSub.timestamp || 0;
+                    if (masaKini - masaSimpan <= TEMPOH_RESET_KR) {
+                        hwCount++;
+                        hwListHtml += `
+                            <div class="homework-badge">
+                                <span>${sub.ikon}</span> <b>${sub.nama}</b>
+                            </div>`;
+                    }
+                }
+            });
+
+            const hwBox = document.getElementById('gNfcHomeworkBox');
+            if(hwCount > 0) {
+                document.getElementById('gNfcHomeworkList').innerHTML = hwListHtml;
+                hwBox.style.display = 'block';
+            } else {
+                hwBox.style.display = 'none';
+            }
+
+            // Tunjukkan Butang Disiplin jika ada rekod
+            const adaSalahLaku = databaseSalahLaku.some(r => r.uid === m.uid || (r.nama && r.nama.trim().toUpperCase() === m.nama.trim().toUpperCase()));
+            document.getElementById('btnLihatDisiplinAnak').style.display = adaSalahLaku ? 'block' : 'none';
+
         } else {
             muridNfcSemasa = null;
             document.getElementById('gNfcIcon').innerText = "❌";
             document.getElementById('gNfcNama').innerText = "KAD TIDAK DIKENALI";
             document.getElementById('gNfcKelas').innerText = "UID: " + uid;
             document.getElementById('gNfcScoreBox').style.display = 'none';
+            document.getElementById('gNfcHomeworkBox').style.display = 'none';
             document.getElementById('gNfcRalat').style.display = 'block';
             document.getElementById('btnLihatDisiplinAnak').style.display = 'none';
         }
@@ -300,14 +552,13 @@
         document.getElementById('popupNfcGlobal').style.display = 'none';
     }
 
-    // --- NAVIGASI ---
     function kembali() { 
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'block';
         document.getElementById('cariUtama').value = "";
     }
 
-    // --- KEHADIRAN AM ---
+    // --- KEHADIRAN ---
     function bukaKehadiran() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
@@ -338,27 +589,27 @@
         listMurid.forEach(m => {
             const isHadir = dataHadir[m.uid] === true;
             if(isHadir) hadirCount++;
-            const statusBg = isHadir ? 'var(--success)' : '#fee2e2';
-            const statusColor = isHadir ? 'white' : 'var(--danger)';
+            const statusBg = isHadir ? '#dcfce7' : '#fee2e2';
+            const statusColor = isHadir ? '#15803d' : 'var(--danger)';
             const statusTxt = isHadir ? 'HADIR' : 'TIADA REKOD';
 
             container.innerHTML += `
             <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
-                    <div style="font-size:0.75rem; color:#888;">Kelas: ${m.tahun} ${m.namaKelas}</div>
+                    <div style="font-size:0.75rem; color:#64748b;">Kelas: ${m.tahun} ${m.namaKelas}</div>
                 </div>
-                <div style="background:${statusBg}; color:${statusColor}; padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:800;">
+                <div style="background:${statusBg}; color:${statusColor}; padding:6px 12px; border-radius:10px; font-size:0.75rem; font-weight:800;">
                     ${statusTxt}
                 </div>
             </div>`;
         });
 
-        stat.innerHTML = `<div style="font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">KEHADIRAN KELAS ${thn} ${kls}</div>
-                          <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listMurid.length} Hadir</div>`;
+        stat.innerHTML = `<div style="font-size:0.75rem; text-transform:uppercase; opacity:0.8;">KEHADIRAN KELAS ${thn} ${kls}</div>
+                          <div style="font-size:2rem; font-weight:800; margin-top:3px;">${hadirCount} / ${listMurid.length} Hadir</div>`;
     }
 
-    // --- KEHADIRAN RMT ---
+    // --- RMT ---
     function bukaRMT() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
@@ -380,49 +631,85 @@
         const dataHadir = snapHadir.val() || {};
 
         let listRMT = databaseMurid.filter(m => m.rmt === true || m.rmt === "true");
-        
-        listRMT.sort((a,b) => {
-            if (parseInt(a.tahun) !== parseInt(b.tahun)) return parseInt(a.tahun) - parseInt(b.tahun);
-            if (a.namaKelas !== b.namaKelas) return a.namaKelas.localeCompare(b.namaKelas);
-            return a.nama.localeCompare(b.nama);
-        });
+        listRMT.sort((a,b) => (a.tahun != b.tahun) ? a.tahun - b.tahun : a.nama.localeCompare(b.nama));
 
         let hadirCount = 0;
         listRMT.forEach(m => {
             const isHadir = dataHadir[m.uid] === true;
             if(isHadir) hadirCount++;
-            const statusBg = isHadir ? 'var(--success)' : '#fee2e2';
-            const statusColor = isHadir ? 'white' : 'var(--danger)';
+            const statusBg = isHadir ? '#dcfce7' : '#fee2e2';
+            const statusColor = isHadir ? '#15803d' : 'var(--danger)';
             const statusTxt = isHadir ? 'DIAMBIL' : 'BELUM AMBIL';
 
             container.innerHTML += `
             <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
-                    <div style="font-size:0.75rem; color:#888; font-weight:600;">TAHUN ${m.tahun} ${m.namaKelas}</div>
+                    <div style="font-size:0.75rem; color:#64748b;">TAHUN ${m.tahun} ${m.namaKelas}</div>
                 </div>
-                <div style="background:${statusBg}; color:${statusColor}; padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:800;">
+                <div style="background:${statusBg}; color:${statusColor}; padding:6px 12px; border-radius:10px; font-size:0.75rem; font-weight:800;">
                     ${statusTxt}
                 </div>
             </div>`;
         });
 
-        stat.innerHTML = `<div style="font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">LOG AMBILAN MAKANAN RMT</div>
-                          <div style="font-size:2.2rem; font-weight:800;">${hadirCount} / ${listRMT.length} Murid</div>`;
+        stat.innerHTML = `<div style="font-size:0.75rem; text-transform:uppercase; opacity:0.9;">LOG AMBILAN MAKANAN RMT</div>
+                          <div style="font-size:2rem; font-weight:800; margin-top:3px;">${hadirCount} / ${listRMT.length} Murid</div>`;
     }
 
-    // --- KERJA RUMAH & TUGASAN ---
+    // --- KERJA RUMAH (MODUL IKON KELAS DAHULU) ---
     function bukaKerjaRumah() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
         document.getElementById('kerjaRumahView').style.display = 'block';
-        renderKerjaRumah();
+        
+        // Peringkat 1: Pilih Kelas Dahulu
+        document.getElementById('panelPilihKelasHW').style.display = 'block';
+        document.getElementById('panelTugasanHW').style.display = 'none';
+        
+        renderGridPilihKelasHW();
     }
 
-    function renderKerjaRumah() {
-        const thn = document.getElementById('selTahunHW').value;
-        const kls = document.getElementById('selKelasHW').value;
-        const classKey = `${thn}_${kls}`;
+    function renderGridPilihKelasHW() {
+        const grid = document.getElementById('gridPilihKelasHW');
+        grid.innerHTML = "";
+        
+        for(let t = 1; t <= 6; t++) {
+            ['DELIMA', 'ZAMRUD'].forEach(k => {
+                const btn = document.createElement('div');
+                btn.className = 'kelas-card';
+                btn.innerHTML = `
+                    <div style="font-size:1.8rem; margin-bottom:4px;">🏫</div>
+                    <div style="font-weight:800; color:var(--dark); font-size:0.95rem;">${t} ${k}</div>
+                    <div style="font-size:0.7rem; color:#64748b;">Klik untuk lihat kerja rumah</div>
+                `;
+                btn.onclick = () => pilihKelasHW(t, k);
+                grid.appendChild(btn);
+            });
+        }
+    }
+
+    function pilihKelasHW(t, k) {
+        selectedHwTahun = t;
+        selectedHwKelas = k;
+        document.getElementById('panelPilihKelasHW').style.display = 'none';
+        document.getElementById('panelTugasanHW').style.display = 'block';
+        document.getElementById('papanInfoKelasHW').innerText = `TUGASAN & KERJA RUMAH (TAHUN ${t} ${k})`;
+        
+        renderTugasanKelasHW();
+    }
+
+    function kembaliPilihKelasHW() {
+        if(document.getElementById('panelTugasanHW').style.display === 'block') {
+            document.getElementById('panelTugasanHW').style.display = 'none';
+            document.getElementById('panelPilihKelasHW').style.display = 'block';
+        } else {
+            kembali();
+        }
+    }
+
+    function renderTugasanKelasHW() {
+        const classKey = `${selectedHwTahun}_${selectedHwKelas}`;
         const container = document.getElementById('senaraiKerjaRumahContainer');
         const subjekRingkasanContainer = document.getElementById('ringkasanSubjekContainer');
         
@@ -437,7 +724,6 @@
             const dataSub = dataKelasKR[sub.id];
             if(dataSub && dataSub.link) {
                 const masaSimpan = dataSub.timestamp || 0;
-                // Semakan tempoh luput 7 hari
                 if (masaKini - masaSimpan <= TEMPOH_RESET_KR) {
                     senaraiAdaKR.push({
                         ...sub,
@@ -449,23 +735,23 @@
         });
 
         if (senaraiAdaKR.length === 0) {
-            subjekRingkasanContainer.innerHTML = `<span style="font-size:0.85rem; color:#aaa; font-style:italic;">Tiada kerja rumah direkodkan untuk mana-mana subjek.</span>`;
+            subjekRingkasanContainer.innerHTML = `<span style="font-size:0.8rem; color:#94a3b8; font-style:italic;">Tiada kerja rumah direkodkan.</span>`;
             container.innerHTML = `
-                <div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#888; border: 1px solid #eee;">
-                    📝 Tiada kerja rumah atau tugasan direkodkan untuk kelas ini.
+                <div style="text-align:center; padding:35px; background:white; border-radius:20px; color:#64748b; border: 1px solid #e2e8f0;">
+                    📝 Tiada sebarang kerja rumah atau tugasan bagi kelas ini.
                 </div>`;
             return;
         }
 
-        // Tunjukkan lencana subjek yang ada kerja rumah
+        // Paparkan Lencana Ikon Subjek Ada Kerja Rumah
         senaraiAdaKR.forEach(item => {
             subjekRingkasanContainer.innerHTML += `
-                <span style="background:var(--primary); color:white; padding:6px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; display:inline-block;">
-                    ${item.ikon} ${item.nama}
+                <span style="background:var(--primary); color:white; padding:6px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+                    <span>${item.ikon}</span> <span>${item.nama}</span>
                 </span>`;
         });
 
-        // Tunjukkan kad kerja rumah
+        // Paparkan Kad Kerja Rumah Subjek
         senaraiAdaKR.forEach(item => {
             const tarikhDiberi = item.timestamp 
                 ? new Date(item.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
@@ -474,15 +760,15 @@
             container.innerHTML += `
             <div class="murid-item" style="border-left: 5px solid var(--warning);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="background:var(--warning); color:white; font-size:0.75rem; padding:4px 10px; border-radius:8px; font-weight:bold; letter-spacing:0.5px;">
+                    <span style="background:var(--warning); color:white; font-size:0.75rem; padding:4px 10px; border-radius:8px; font-weight:bold;">
                         ${item.ikon} ${item.nama.toUpperCase()}
                     </span>
-                    <span style="font-size:0.75rem; color:#888; font-weight:600;">
-                        📅 Tarikh Diberi: ${tarikhDiberi}
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                        📅 Tarikh: ${tarikhDiberi}
                     </span>
                 </div>
-                <h4 style="margin:8px 0 4px 0; font-size:1rem; color:var(--dark); font-weight:700;">Tugasan ${item.nama} (${thn} ${kls})</h4>
-                <a href="${item.link}" target="_blank" class="btn-aksi" style="display:block; background:var(--primary); text-decoration:none; text-align:center; margin-top:12px; box-sizing:border-box; color:white;">
+                <h4 style="margin:8px 0 4px 0; font-size:0.95rem; color:var(--dark);">Tugasan ${item.nama} (${selectedHwTahun} ${selectedHwKelas})</h4>
+                <a href="${item.link}" target="_blank" class="btn-aksi" style="background:var(--primary); margin-top:10px;">
                     🔗 BUKA PAUTAN / BAHAN TUGASAN
                 </a>
             </div>`;
@@ -520,44 +806,44 @@
 
         if(rekodAnak.length === 0) {
             listContainer.innerHTML = `
-                <div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#2ecc71; font-weight:bold; border: 1px solid #eee;">
-                    🎉 Tahniah! Tiada sebarang rekod salah laku atau pelanggaran disiplin dicatatkan untuk anak anda.
+                <div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#16a34a; font-weight:bold; border: 1px solid #e2e8f0;">
+                    🎉 Tahniah! Tiada sebarang rekod salah laku dicatatkan untuk anak anda.
                 </div>`;
         } else {
             rekodAnak.forEach(r => {
                 listContainer.innerHTML += `
                 <div class="murid-item" style="border-left: 4px solid var(--danger);">
                     <div>
-                        <b style="font-size:0.9rem;">${r.kesalahan}</b>
-                        <div style="font-size:0.75rem; color:#888;">Tarikh / Masa: ${r.masa || '-'}</div>
+                        <b style="font-size:0.9rem; color:var(--danger);">${r.kesalahan}</b>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Tarikh / Masa: ${r.masa || '-'}</div>
                     </div>
-                    <div style="background:#fff5f5; color:var(--danger); padding:8px 12px; border-radius:10px; font-size:0.8rem; font-weight:600; margin-top:8px;">
-                        ⚠️ Tindakan / Catatan: ${r.catatan || 'Tiada catatan tambahan'}
+                    <div style="background:#fff1f2; color:#9f1239; padding:8px 12px; border-radius:10px; font-size:0.8rem; margin-top:8px;">
+                        ⚠️ Catatan: ${r.catatan || 'Tiada catatan tambahan'}
                     </div>
                 </div>`;
             });
         }
     }
 
-    // --- RENDER MENU GRID KELAS ---
+    // --- GRID KELAS PADA LAMAN UTAMA ---
     const grid = document.getElementById('gridKelas');
     for(let t=1; t<=6; t++) {
         ['DELIMA', 'ZAMRUD'].forEach(k => {
             const btn = document.createElement('div');
             btn.className = 'card-btn';
-            btn.innerText = `${t} ${k}`;
+            btn.innerHTML = `<span style="font-size:1.2rem;">🏅</span><span>${t} ${k}</span>`;
             btn.onclick = () => {
                 curTahun = t; curKelas = k;
                 document.getElementById('menuFolder').style.display = 'none';
                 document.getElementById('senaraiView').style.display = 'block';
-                document.getElementById('labelKelas').innerText = `KEDUDUKAN TAHUN ${t} ${k}`;
+                document.getElementById('labelKelas').innerText = `MERIT TAHUN ${t} ${k}`;
                 reRenderSenarai();
             };
             grid.appendChild(btn);
         });
     }
 
-    // --- REALTIME DATA SYNCHRONIZATION ---
+    // --- PEMANTAUAN DATA FIREBASE ---
     db.ref('pelajar').on('value', snap => {
         const data = snap.val();
         databaseMurid = [];
@@ -578,8 +864,8 @@
 
     db.ref('kerjaRumah').on('value', snap => {
         databaseKerjaRumah = snap.val() || {};
-        if(document.getElementById('kerjaRumahView').style.display === 'block') {
-            renderKerjaRumah();
+        if(selectedHwTahun && selectedHwKelas) {
+            renderTugasanKelasHW();
         }
     });
 
@@ -599,27 +885,27 @@
     function reRenderSenarai() {
         const searchVal = document.getElementById('cariUtama').value.toUpperCase();
         let list = searchVal 
-            ? databaseMurid.filter(m => m.nama.includes(searchVal)) 
+            ? databaseMurid.filter(m => m.nama.toUpperCase().includes(searchVal)) 
             : databaseMurid.filter(m => m.tahun == curTahun && m.namaKelas == curKelas);
             
         const container = document.getElementById('muridContainer');
         container.innerHTML = "";
         
-        list.sort((a,b) => b.markah - a.markah).forEach((m, indeks) => {
-            const tagRMT = m.rmt ? `<span style="background:var(--rmt); color:white; font-size:0.6rem; padding:3px 6px; border-radius:5px; margin-left:5px;">RMT</span>` : '';
+        list.sort((a,b) => (b.markah || 0) - (a.markah || 0)).forEach((m, indeks) => {
+            const tagRMT = m.rmt ? `<span style="background:var(--rmt); color:white; font-size:0.6rem; padding:2px 6px; border-radius:4px; margin-left:4px;">RMT</span>` : '';
             
             container.innerHTML += `
             <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <span style="font-weight:bold; color:var(--primary); font-size:0.85rem;">#${indeks + 1}</span>
-                    <b style="font-size:0.95rem; margin-left:5px;">${m.nama}</b> ${tagRMT}
-                    <div style="font-size:0.75rem; color:#888; margin-left:22px;">Tahun ${m.tahun} ${m.namaKelas}</div>
+                    <b style="font-size:0.9rem; margin-left:5px;">${m.nama}</b> ${tagRMT}
+                    <div style="font-size:0.75rem; color:#64748b; margin-left:22px;">Tahun ${m.tahun} ${m.namaKelas}</div>
                 </div>
                 <span class="badge-skor">${m.markah || 0} Pts</span>
             </div>`;
         });
         
-        if(list.length === 0) container.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">Tiada rekod sepadan ditemui.</div>`;
+        if(list.length === 0) container.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b;">Tiada rekod sepadan ditemui.</div>`;
     }
 </script>
 </body>
