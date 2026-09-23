@@ -19,7 +19,6 @@
             --card: #ffffff; 
             --purple: #7209b7; 
             --warning: #e67e22; 
-            --quran: #059669;
         }
 
         body { 
@@ -173,7 +172,7 @@
             margin: 5px 0; 
         }
 
-        input[type="date"], select, input[type="number"], input[type="text"] { 
+        input[type="date"], select, input[type="number"] { 
             width: 100%; 
             padding: 14px 18px; 
             border-radius: 16px; 
@@ -199,6 +198,7 @@
             display: none; 
         }
 
+        /* Class Selection Card Style */
         .kelas-card {
             background: white;
             border-radius: 18px;
@@ -224,40 +224,39 @@
             font-weight: 600;
         }
 
-        /* Stepper Button Styles */
-        .stepper-container {
+        /* Gaya Khas Butang Tambah/Tolak Muka Surat Bacaan */
+        .counter-box {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             margin: 10px 0;
         }
-        .btn-stepper {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+        .btn-counter {
+            background: var(--primary);
+            color: white;
             border: none;
-            background: #f1f5f9;
-            color: var(--dark);
-            font-size: 1.5rem;
-            font-weight: 800;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.15s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+            transition: transform 0.1s;
         }
-        .btn-stepper:active {
+        .btn-counter:active {
             transform: scale(0.9);
-            background: #e2e8f0;
         }
-        .stepper-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--quran);
-            min-width: 60px;
+        .input-ms {
+            width: 90px !important;
             text-align: center;
+            font-size: 1.2rem !important;
+            font-weight: bold;
+            margin-bottom: 0 !important;
         }
     </style>
 </head>
@@ -276,7 +275,7 @@
             <div class="score-big" id="gNfcSkorDisplay">0</div>
         </div>
 
-        <!-- Seksyen Kerja Rumah Murid -->
+        <!-- Seksyen Kerja Rumah Murid (Muncul jika ada) -->
         <div id="gNfcHomeworkBox" style="display:none; text-align:left; background:#fffbe8; border:1px solid #fce38a; padding:15px; border-radius:20px; margin-bottom:15px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #d97706; margin-bottom: 8px; display:flex; align-items:center; gap:5px;">
                 📚 KERJA RUMAH DIBERI HARI INI:
@@ -313,10 +312,6 @@
                 <span class="btn-icon">📡</span> 
                 <span>AKTIFKAN IMBASAN KAD ANAK (NFC)</span>
             </div>
-            <div class="card-btn" style="color:var(--quran);" onclick="bukaBacaan()">
-                <span class="btn-icon">📖</span>
-                <span>IQRA' & AL-QURAN</span>
-            </div>
             <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">
                 <span class="btn-icon">📅</span>
                 <span>REKOD KEHADIRAN</span>
@@ -328,6 +323,10 @@
             <div class="card-btn" style="color:var(--warning)" onclick="bukaKerjaRumah()">
                 <span class="btn-icon">📚</span>
                 <span>KERJA RUMAH</span>
+            </div>
+            <div class="card-btn" style="color: #0284c7;" onclick="bukaBacaan()">
+                <span class="btn-icon">📖</span>
+                <span>REKOD BACAAN</span>
             </div>
             <div class="card-btn" style="color:var(--danger);" onclick="bukaDisiplin()">
                 <span class="btn-icon">🚨</span>
@@ -346,27 +345,6 @@
             <h3 id="labelKelas" style="margin:0; font-size:1.1rem;">SENARAI MURID</h3>
         </div>
         <div id="muridContainer"></div>
-    </div>
-
-    <!-- View Bacaan Iqra & Al-Quran -->
-    <div id="bacaanView" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
-            <h3 style="margin:0; color:var(--quran); font-size:1.1rem;">📖 REKOD IQRA' & AL-QURAN</h3>
-        </div>
-
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <select id="selTahunBacaan" onchange="renderBacaan()">
-                <option value="1">Tahun 1</option><option value="2">Tahun 2</option>
-                <option value="3">Tahun 3</option><option value="4">Tahun 4</option>
-                <option value="5">Tahun 5</option><option value="6">Tahun 6</option>
-            </select>
-            <select id="selKelasBacaan" onchange="renderBacaan()">
-                <option value="DELIMA">DELIMA</option><option value="ZAMRUD">ZAMRUD</option>
-            </select>
-        </div>
-
-        <div id="listBacaanContainer"></div>
     </div>
 
     <!-- View Kehadiran -->
@@ -401,23 +379,26 @@
         <div id="listRMTTable"></div>
     </div>
 
-    <!-- View Kerja Rumah -->
+    <!-- View Kerja Rumah (PILIH KELAS DAHULU) -->
     <div id="kerjaRumahView" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembaliPilihKelasHW()">⬅️ Pilih Kelas</button>
             <h3 style="margin:0; color:var(--warning); font-size:1.1rem;">KERJA RUMAH & TUGASAN</h3>
         </div>
 
+        <!-- Langkah 1: Pilih Kelas -->
         <div id="panelPilihKelasHW">
             <div class="section-title">🏫 Sila Pilih Kelas Anak Anda:</div>
             <div id="gridPilihKelasHW" class="grid-menu"></div>
         </div>
 
+        <!-- Langkah 2: Paparan Kerja Rumah Mengikut Kelas -->
         <div id="panelTugasanHW" style="display:none;">
             <div id="papanInfoKelasHW" style="background: var(--dark); color: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; text-align: center; font-weight: 700;">
                 -
             </div>
 
+            <!-- Ringkasan Subjek Yang Terdapat Kerja Rumah -->
             <div style="background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">
                     📌 Subjek Yang Ada Kerja Rumah Aktif:
@@ -427,6 +408,59 @@
 
             <div id="senaraiKerjaRumahContainer"></div>
         </div>
+    </div>
+
+    <!-- VIEW REKOD BACAAN (IQRA' & AL-QURAN) -->
+    <div id="bacaanView" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark); width:auto; padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 style="margin:0; color:#0284c7; font-size:1.1rem;">REKOD BACAAN IQRA' & AL-QURAN</h3>
+        </div>
+
+        <div style="background:white; padding:20px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:15px;">
+            <label style="font-size:0.8rem; font-weight:700; color:#64748b;">PILIH ANAK / MURID:</label>
+            <select id="selMuridBacaan" onchange="tukarMuridBacaan()">
+                <option value="">-- Sila Pilih Murid --</option>
+            </select>
+
+            <div id="formKemaskiniBacaan" style="display:none; margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+                <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JENIS BACAAN:</label>
+                <select id="jenisBacaan" onchange="tukarJenisBacaan()">
+                    <option value="Iqra">Iqra'</option>
+                    <option value="Al-Quran">Al-Quran</option>
+                </select>
+
+                <div id="secIqra">
+                    <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JILID IQRA':</label>
+                    <select id="jilidIqra">
+                        <option value="1">Iqra' 1</option>
+                        <option value="2">Iqra' 2</option>
+                        <option value="3">Iqra' 3</option>
+                        <option value="4">Iqra' 4</option>
+                        <option value="5">Iqra' 5</option>
+                        <option value="6">Iqra' 6</option>
+                    </select>
+                </div>
+
+                <div id="secQuran" style="display:none;">
+                    <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JUZUK AL-QURAN:</label>
+                    <input type="number" id="juzukQuran" min="1" max="30" value="1" placeholder="Juzuk (1-30)">
+                </div>
+
+                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN -->
+                <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center;">MUKA SURAT BACAAN TERKINI:</label>
+                <div class="counter-box">
+                    <button class="btn-counter" type="button" onclick="ubahMukaSurat(-1)">-</button>
+                    <input type="number" id="msBacaan" class="input-ms" value="1" min="1">
+                    <button class="btn-counter" type="button" onclick="ubahMukaSurat(1)">+</button>
+                </div>
+
+                <button class="btn-aksi" style="background:#0284c7; color:white; margin-top:10px;" onclick="simpanRekodBacaan()">💾 SIMPAN REKOD BACAAN</button>
+            </div>
+        </div>
+
+        <div class="section-title">📜 Sejarah Rekod Bacaan Terkini</div>
+        <div id="senaraiRekodBacaan"></div>
     </div>
 
     <!-- View Disiplin -->
@@ -480,7 +514,7 @@
         { id: 'PJK', nama: 'PJK', ikon: '⚽' }
     ];
 
-    const TEMPOH_RESET_KR = 7 * 24 * 60 * 60 * 1000;
+    const TEMPOH_RESET_KR = 7 * 24 * 60 * 60 * 1000; // 7 Hari dalam milisaat
 
     let databaseMurid = [];
     let databaseSalahLaku = [];
@@ -538,7 +572,7 @@
         }
     }
 
-    // --- POPUP SEMAKAN NFC ---
+    // --- POPUP SEMAKAN NFC (MARKAH MERIT & KERJA RUMAH) ---
     function paparMaklumatKadAnak(uid) {
         const m = databaseMurid.find(x => x.uid === uid);
         document.getElementById('popupNfcGlobal').style.display = 'flex';
@@ -552,6 +586,7 @@
             document.getElementById('gNfcScoreBox').style.display = 'block';
             document.getElementById('gNfcRalat').style.display = 'none';
 
+            // Semak Kerja Rumah Kelas Anak
             const classKey = `${m.tahun}_${m.namaKelas}`;
             const dataKelasKR = databaseKerjaRumah[classKey] || {};
             const masaKini = Date.now();
@@ -580,6 +615,7 @@
                 hwBox.style.display = 'none';
             }
 
+            // Tunjukkan Butang Disiplin jika ada rekod
             const adaSalahLaku = databaseSalahLaku.some(r => r.uid === m.uid || (r.nama && r.nama.trim().toUpperCase() === m.nama.trim().toUpperCase()));
             document.getElementById('btnLihatDisiplinAnak').style.display = adaSalahLaku ? 'block' : 'none';
 
@@ -613,132 +649,6 @@
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'block';
         document.getElementById('cariUtama').value = "";
-    }
-
-    // --- REKOD BACAAN IQRA' & AL-QURAN ---
-    function bukaBacaan() {
-        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
-        document.getElementById('menuFolder').style.display = 'none';
-        document.getElementById('bacaanView').style.display = 'block';
-        renderBacaan();
-    }
-
-    function renderBacaan() {
-        const thn = document.getElementById('selTahunBacaan').value;
-        const kls = document.getElementById('selKelasBacaan').value;
-        const container = document.getElementById('listBacaanContainer');
-        container.innerHTML = "";
-
-        let listMurid = databaseMurid.filter(m => m.tahun == thn && m.namaKelas == kls);
-        listMurid.sort((a,b) => a.nama.localeCompare(b.nama));
-
-        if (listMurid.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b;">Tiada murid dalam kelas ini.</div>`;
-            return;
-        }
-
-        listMurid.forEach(m => {
-            const dataB = databaseBacaan[m.uid] || { jenis: 'IQRA', iqraVol: 1, ms: 1, surah: 'Al-Fatihah', juzuk: 1 };
-            const isQuran = dataB.jenis === 'QURAN';
-
-            container.innerHTML += `
-            <div class="murid-item" style="border-left: 5px solid var(--quran);">
-                <div style="font-weight:bold; font-size:0.95rem; margin-bottom:10px; color:var(--dark);">${m.nama}</div>
-                
-                <div style="display:flex; gap:8px; margin-bottom:12px;">
-                    <button type="button" class="btn-aksi" style="padding:8px; background:${!isQuran ? 'var(--quran)' : '#cbd5e1'}; font-size:0.75rem;" onclick="tukarJenisBacaan('${m.uid}', 'IQRA')">📖 IQRA'</button>
-                    <button type="button" class="btn-aksi" style="padding:8px; background:${isQuran ? 'var(--quran)' : '#cbd5e1'}; font-size:0.75rem;" onclick="tukarJenisBacaan('${m.uid}', 'QURAN')">🕌 AL-QURAN</button>
-                </div>
-
-                ${!isQuran ? `
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; background:#f8fafc; padding:12px; border-radius:15px; margin-bottom:10px;">
-                        <div>
-                            <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-bottom:4px;">JILID IQRA'</label>
-                            <select onchange="kemaskiniBacaanField('${m.uid}', 'iqraVol', parseInt(this.value))" style="margin-bottom:0; padding:8px 10px; text-align:center;">
-                                ${[1,2,3,4,5,6].map(v => `<option value="${v}" ${dataB.iqraVol == v ? 'selected' : ''}>Iqra' ${v}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-bottom:4px;">MUKA SURAT</label>
-                            <div class="stepper-container" style="margin:0;">
-                                <button class="btn-stepper" onclick="ubahMukaSurat('${m.uid}', -1)">-</button>
-                                <span class="stepper-value">${dataB.ms || 1}</span>
-                                <button class="btn-stepper" onclick="ubahMukaSurat('${m.uid}', 1)">+</button>
-                            </div>
-                        </div>
-                    </div>
-                ` : `
-                    <div style="background:#f8fafc; padding:12px; border-radius:15px; margin-bottom:10px;">
-                        <div style="margin-bottom:8px;">
-                            <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; margin-bottom:4px;">NAMA SURAH</label>
-                            <input type="text" value="${dataB.surah \vert{}\vert{} ''}" placeholder="Cth: Al-Baqarah" onchange="kemaskiniBacaanField('${m.uid}', 'surah', this.value)" style="margin-bottom:0; padding:8px 12px;">
-                        </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-                            <div>
-                                <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-bottom:4px;">JUZUK</label>
-                                <div class="stepper-container" style="margin:0;">
-                                    <button class="btn-stepper" onclick="ubahJuzuk('${m.uid}', -1)">-</button>
-                                    <span class="stepper-value" style="font-size:1.3rem;">Juz ${dataB.juzuk || 1}</span>
-                                    <button class="btn-stepper" onclick="ubahJuzuk('${m.uid}', 1)">+</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-bottom:4px;">MUKA SURAT</label>
-                                <div class="stepper-container" style="margin:0;">
-                                    <button class="btn-stepper" onclick="ubahMukaSurat('${m.uid}', -1)">-</button>
-                                    <span class="stepper-value">${dataB.ms || 1}</span>
-                                    <button class="btn-stepper" onclick="ubahMukaSurat('${m.uid}', 1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `}
-                <div style="font-size:0.7rem; color:#64748b; text-align:right;">Kemaskini Terakhir: ${dataB.tarikh || '-'}</div>
-            </div>`;
-        });
-    }
-
-    function tukarJenisBacaan(uid, jenis) {
-        const rekodAwal = databaseBacaan[uid] || { iqraVol: 1, ms: 1, surah: 'Al-Fatihah', juzuk: 1 };
-        db.ref('bacaan/' + uid).update({
-            ...rekodAwal,
-            jenis: jenis,
-            tarikh: getTarikhHariIni()
-        });
-    }
-
-    function ubahMukaSurat(uid, delta) {
-        const rekod = databaseBacaan[uid] || { jenis: 'IQRA', iqraVol: 1, ms: 1, surah: 'Al-Fatihah', juzuk: 1 };
-        let msBaharu = (rekod.ms || 1) + delta;
-        if (msBaharu < 1) msBaharu = 1;
-        
-        db.ref('bacaan/' + uid).update({
-            ...rekod,
-            ms: msBaharu,
-            tarikh: getTarikhHariIni()
-        });
-    }
-
-    function ubahJuzuk(uid, delta) {
-        const rekod = databaseBacaan[uid] || { jenis: 'QURAN', iqraVol: 1, ms: 1, surah: 'Al-Fatihah', juzuk: 1 };
-        let juzukBaharu = (rekod.juzuk || 1) + delta;
-        if (juzukBaharu < 1) juzukBaharu = 1;
-        if (juzukBaharu > 30) juzukBaharu = 30;
-
-        db.ref('bacaan/' + uid).update({
-            ...rekod,
-            juzuk: juzukBaharu,
-            tarikh: getTarikhHariIni()
-        });
-    }
-
-    function kemaskiniBacaanField(uid, medan, nilai) {
-        const rekod = databaseBacaan[uid] || { jenis: 'IQRA', iqraVol: 1, ms: 1, surah: 'Al-Fatihah', juzuk: 1 };
-        db.ref('bacaan/' + uid).update({
-            ...rekod,
-            [medan]: nilai,
-            tarikh: getTarikhHariIni()
-        });
     }
 
     // --- KEHADIRAN ---
@@ -840,12 +750,13 @@
                           <div style="font-size:2rem; font-weight:800; margin-top:3px;">${hadirCount} / ${listRMT.length} Murid</div>`;
     }
 
-    // --- KERJA RUMAH ---
+    // --- KERJA RUMAH (MODUL IKON KELAS DAHULU) ---
     function bukaKerjaRumah() {
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'none';
         document.getElementById('kerjaRumahView').style.display = 'block';
         
+        // Peringkat 1: Pilih Kelas Dahulu
         document.getElementById('panelPilihKelasHW').style.display = 'block';
         document.getElementById('panelTugasanHW').style.display = 'none';
         
@@ -925,6 +836,7 @@
             return;
         }
 
+        // Paparkan Lencana Ikon Subjek Ada Kerja Rumah
         senaraiAdaKR.forEach(item => {
             subjekRingkasanContainer.innerHTML += `
                 <span style="background:var(--primary); color:white; padding:6px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
@@ -932,6 +844,7 @@
                 </span>`;
         });
 
+        // Paparkan Kad Kerja Rumah Subjek
         senaraiAdaKR.forEach(item => {
             const tarikhDiberi = item.timestamp 
                 ? new Date(item.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
@@ -953,6 +866,124 @@
                 </a>
             </div>`;
         });
+    }
+
+    // --- LOGIK MODUL REKOD BACAAN (IQRA' & AL-QURAN) ---
+    function bukaBacaan() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById('menuFolder').style.display = 'none';
+        document.getElementById('bacaanView').style.display = 'block';
+
+        const select = document.getElementById('selMuridBacaan');
+        select.innerHTML = `<option value="">-- Sila Pilih Murid --</option>`;
+        
+        let sorted = [...databaseMurid].sort((a,b) => a.nama.localeCompare(b.nama));
+        sorted.forEach(m => {
+            select.innerHTML += `<option value="${m.uid}">${m.nama} (Tahun ${m.tahun} ${m.namaKelas})</option>`;
+        });
+
+        renderSenaraiRekodBacaan();
+    }
+
+    function ubahMukaSurat(nilai) {
+        const input = document.getElementById('msBacaan');
+        let val = parseInt(input.value) || 1;
+        val += nilai;
+        if (val < 1) val = 1;
+        input.value = val;
+    }
+
+    function tukarMuridBacaan() {
+        const uid = document.getElementById('selMuridBacaan').value;
+        const form = document.getElementById('formKemaskiniBacaan');
+        if(uid) {
+            form.style.display = 'block';
+            const dataB = databaseBacaan[uid];
+            if(dataB) {
+                document.getElementById('jenisBacaan').value = dataB.jenis || 'Iqra';
+                tukarJenisBacaan();
+                if(dataB.jenis === 'Al-Quran') {
+                    document.getElementById('juzukQuran').value = dataB.juzuk || 1;
+                } else {
+                    document.getElementById('jilidIqra').value = dataB.jilid || 1;
+                }
+                document.getElementById('msBacaan').value = dataB.mukaSurat || 1;
+            } else {
+                document.getElementById('jenisBacaan').value = 'Iqra';
+                tukarJenisBacaan();
+                document.getElementById('msBacaan').value = 1;
+            }
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
+    function tukarJenisBacaan() {
+        const jenis = document.getElementById('jenisBacaan').value;
+        if(jenis === 'Al-Quran') {
+            document.getElementById('secQuran').style.display = 'block';
+            document.getElementById('secIqra').style.display = 'none';
+        } else {
+            document.getElementById('secQuran').style.display = 'none';
+            document.getElementById('secIqra').style.display = 'block';
+        }
+    }
+
+    async function simpanRekodBacaan() {
+        const uid = document.getElementById('selMuridBacaan').value;
+        if(!uid) {
+            alert("Sila pilih murid terlebih dahulu.");
+            return;
+        }
+
+        const jenis = document.getElementById('jenisBacaan').value;
+        const ms = parseInt(document.getElementById('msBacaan').value) || 1;
+        
+        let payload = {
+            jenis: jenis,
+            mukaSurat: ms,
+            tarikhKemaskini: getTarikhHariIni(),
+            timestamp: Date.now()
+        };
+
+        if(jenis === 'Al-Quran') {
+            payload.juzuk = parseInt(document.getElementById('juzukQuran').value) || 1;
+        } else {
+            payload.jilid = document.getElementById('jilidIqra').value;
+        }
+
+        await db.ref('rekodBacaan/' + uid).set(payload);
+        alert("Rekod bacaan berjaya dikemaskini!");
+        renderSenaraiRekodBacaan();
+    }
+
+    function renderSenaraiRekodBacaan() {
+        const container = document.getElementById('senaraiRekodBacaan');
+        container.innerHTML = "";
+
+        let count = 0;
+        for(let uid in databaseBacaan) {
+            const m = databaseMurid.find(x => x.uid === uid);
+            if(m) {
+                count++;
+                const b = databaseBacaan[uid];
+                const infoDetail = b.jenis === 'Al-Quran' 
+                    ? `📖 <b>Al-Quran</b> - Juzuk ${b.juzuk || 1}, Muka Surat: <b>${b.mukaSurat || 1}</b>`
+                    : `📘 <b>Iqra' ${b.jilid || 1}</b> - Muka Surat: <b>${b.mukaSurat || 1}</b>`;
+
+                container.innerHTML += `
+                <div class="murid-item" style="border-left: 4px solid #0284c7;">
+                    <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">Tahun ${m.tahun} ${m.namaKelas}</div>
+                    <div style="font-size:0.85rem; color:var(--dark);">${infoDetail}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;">Tarikh Kemaskini: ${b.tarikhKemaskini || '-'}</div>
+                </div>`;
+            }
+        }
+
+        if(count === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#64748b; border:1px solid #e2e8f0;">Belum ada rekod bacaan yang disimpan.</div>`;
+        }
     }
 
     // --- REKOD DISIPLIN ---
@@ -1031,7 +1062,7 @@
         if(document.getElementById('senaraiView').style.display === 'block') reRenderSenarai();
         if(document.getElementById('kehadiranView').style.display === 'block') renderKehadiran();
         if(document.getElementById('rmtView').style.display === 'block') renderRMT();
-        if(document.getElementById('bacaanView').style.display === 'block') renderBacaan();
+        if(document.getElementById('bacaanView').style.display === 'block') bukaBacaan();
     });
 
     db.ref('salahLaku').on('value', snap => {
@@ -1050,10 +1081,10 @@
         }
     });
 
-    db.ref('bacaan').on('value', snap => {
+    db.ref('rekodBacaan').on('value', snap => {
         databaseBacaan = snap.val() || {};
         if(document.getElementById('bacaanView').style.display === 'block') {
-            renderBacaan();
+            renderSenaraiRekodBacaan();
         }
     });
 
