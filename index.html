@@ -275,6 +275,24 @@
             <div class="score-big" id="gNfcSkorDisplay">0</div>
         </div>
 
+        <!-- Seksyen Rekod Bacaan Iqra' & Al-Quran Dalam Popup -->
+        <div id="gNfcBacaanBox" style="display:none; text-align:center; background:#f0f9ff; border:1px solid #bae6fd; padding:15px; border-radius:20px; margin-bottom:15px;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #0284c7; margin-bottom: 8px; display:flex; align-items:center; justify-content:center; gap:5px;">
+                📖 REKOD BACAAN TERKINI
+            </div>
+            <div id="gNfcBacaanDetail" style="font-size:0.9rem; font-weight:bold; color:var(--dark); margin-bottom:10px;">
+                Belum ada rekod.
+            </div>
+            
+            <label style="font-size:0.75rem; font-weight:700; color:#64748b; display:block;">KEMASKINI MUKA SURAT:</label>
+            <div class="counter-box">
+                <button class="btn-counter" type="button" onclick="ubahMukaSuratPopup(-1)">-</button>
+                <input type="number" id="msBacaanPopup" class="input-ms" value="1" min="1">
+                <button class="btn-counter" type="button" onclick="ubahMukaSuratPopup(1)">+</button>
+            </div>
+            <button class="btn-aksi" style="background:#0284c7; color:white; padding:8px; font-size:0.75rem; margin-top:5px;" onclick="simpanRekodBacaanDariPopup()">💾 SIMPAN MUKA SURAT</button>
+        </div>
+
         <!-- Seksyen Kerja Rumah Murid (Muncul jika ada) -->
         <div id="gNfcHomeworkBox" style="display:none; text-align:left; background:#fffbe8; border:1px solid #fce38a; padding:15px; border-radius:20px; margin-bottom:15px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #d97706; margin-bottom: 8px; display:flex; align-items:center; gap:5px;">
@@ -572,7 +590,7 @@
         }
     }
 
-    // --- POPUP SEMAKAN NFC (MARKAH MERIT & KERJA RUMAH) ---
+    // --- POPUP SEMAKAN NFC (MARKAH MERIT, REKOD BACAAN & KERJA RUMAH) ---
     function paparMaklumatKadAnak(uid) {
         const m = databaseMurid.find(x => x.uid === uid);
         document.getElementById('popupNfcGlobal').style.display = 'flex';
@@ -585,6 +603,23 @@
             document.getElementById('gNfcSkorDisplay').innerText = m.markah || 0;
             document.getElementById('gNfcScoreBox').style.display = 'block';
             document.getElementById('gNfcRalat').style.display = 'none';
+
+            // Semak & Papar Rekod Bacaan Murid Dalam Popup
+            const dataB = databaseBacaan[m.uid];
+            const boxBacaan = document.getElementById('gNfcBacaanBox');
+            const detailBacaan = document.getElementById('gNfcBacaanDetail');
+            boxBacaan.style.display = 'block';
+
+            if(dataB) {
+                const textBacaan = dataB.jenis === 'Al-Quran'
+                    ? `📖 Al-Quran (Juzuk ${dataB.juzuk || 1})`
+                    : `📘 Iqra' ${dataB.jilid || 1}`;
+                detailBacaan.innerHTML = `${textBacaan}<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">${dataB.mukaSurat || 1}</span>`;
+                document.getElementById('msBacaanPopup').value = dataB.mukaSurat || 1;
+            } else {
+                detailBacaan.innerHTML = `📘 Iqra' 1<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">1</span>`;
+                document.getElementById('msBacaanPopup').value = 1;
+            }
 
             // Semak Kerja Rumah Kelas Anak
             const classKey = `${m.tahun}_${m.namaKelas}`;
@@ -625,10 +660,43 @@
             document.getElementById('gNfcNama').innerText = "KAD TIDAK DIKENALI";
             document.getElementById('gNfcKelas').innerText = "UID: " + uid;
             document.getElementById('gNfcScoreBox').style.display = 'none';
+            document.getElementById('gNfcBacaanBox').style.display = 'none';
             document.getElementById('gNfcHomeworkBox').style.display = 'none';
             document.getElementById('gNfcRalat').style.display = 'block';
             document.getElementById('btnLihatDisiplinAnak').style.display = 'none';
         }
+    }
+
+    function ubahMukaSuratPopup(nilai) {
+        const input = document.getElementById('msBacaanPopup');
+        let val = parseInt(input.value) || 1;
+        val += nilai;
+        if (val < 1) val = 1;
+        input.value = val;
+        const valDisplay = document.getElementById('valMsPopup');
+        if(valDisplay) valDisplay.innerText = val;
+    }
+
+    async function simpanRekodBacaanDariPopup() {
+        if(!muridNfcSemasa) return;
+        const ms = parseInt(document.getElementById('msBacaanPopup').value) || 1;
+        
+        const dataSediaAda = databaseBacaan[muridNfcSemasa.uid] || {};
+        let payload = {
+            jenis: dataSediaAda.jenis || 'Iqra',
+            mukaSurat: ms,
+            tarikhKemaskini: getTarikhHariIni(),
+            timestamp: Date.now()
+        };
+
+        if(payload.jenis === 'Al-Quran') {
+            payload.juzuk = dataSediaAda.juzuk || 1;
+        } else {
+            payload.jilid = dataSediaAda.jilid || '1';
+        }
+
+        await db.ref('rekodBacaan/' + muridNfcSemasa.uid).set(payload);
+        alert(`Muka surat bacaan bagi ${muridNfcSemasa.nama} berjaya dikemaskini ke Muka Surat ${ms}!`);
     }
 
     function lihatDisiplinDariPopup() {
@@ -1085,6 +1153,9 @@
         databaseBacaan = snap.val() || {};
         if(document.getElementById('bacaanView').style.display === 'block') {
             renderSenaraiRekodBacaan();
+        }
+        if(muridNfcSemasa && document.getElementById('popupNfcGlobal').style.display === 'flex') {
+            paparMaklumatKadAnak(muridNfcSemasa.uid);
         }
     });
 
