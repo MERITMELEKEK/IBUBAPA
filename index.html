@@ -122,6 +122,11 @@
             text-align: center;
             text-decoration: none;
         }
+        .btn-aksi:disabled {
+            background: #cbd5e1 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed;
+        }
 
         .badge-skor { 
             background: var(--primary); 
@@ -248,7 +253,13 @@
             box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
             transition: transform 0.1s;
         }
-        .btn-counter:active {
+        .btn-counter:disabled {
+            background: #cbd5e1 !important;
+            color: #94a3b8 !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+        }
+        .btn-counter:active:not(:disabled) {
             transform: scale(0.9);
         }
         .input-ms {
@@ -257,6 +268,10 @@
             font-size: 1.2rem !important;
             font-weight: bold;
             margin-bottom: 0 !important;
+        }
+        .input-ms:disabled {
+            background: #f1f5f9 !important;
+            color: #94a3b8 !important;
         }
     </style>
 </head>
@@ -442,15 +457,20 @@
             </select>
 
             <div id="formKemaskiniBacaan" style="display:none; margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+                <!-- STATUS KEBENARAN NFC -->
+                <div id="statusKebenaranNfc" style="background:#fee2e2; color:#b91c1c; border:1px dashed #f87171; padding:10px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-bottom:12px; text-align:center;">
+                    🔒 Sila imbas kad NFC anak untuk membuka butang kemaskini muka surat.
+                </div>
+
                 <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JENIS BACAAN:</label>
-                <select id="jenisBacaan" onchange="tukarJenisBacaan()">
+                <select id="jenisBacaan" onchange="tukarJenisBacaan()" disabled>
                     <option value="Iqra">Iqra'</option>
                     <option value="Al-Quran">Al-Quran</option>
                 </select>
 
                 <div id="secIqra">
                     <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JILID IQRA':</label>
-                    <select id="jilidIqra">
+                    <select id="jilidIqra" disabled>
                         <option value="1">Iqra' 1</option>
                         <option value="2">Iqra' 2</option>
                         <option value="3">Iqra' 3</option>
@@ -462,18 +482,18 @@
 
                 <div id="secQuran" style="display:none;">
                     <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JUZUK AL-QURAN:</label>
-                    <input type="number" id="juzukQuran" min="1" max="30" value="1" placeholder="Juzuk (1-30)">
+                    <input type="number" id="juzukQuran" min="1" max="30" value="1" placeholder="Juzuk (1-30)" disabled>
                 </div>
 
-                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN -->
+                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN (DIKUNCI SECARA LALAI) -->
                 <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center;">MUKA SURAT BACAAN TERKINI:</label>
                 <div class="counter-box">
-                    <button class="btn-counter" type="button" onclick="ubahMukaSurat(-1)">-</button>
-                    <input type="number" id="msBacaan" class="input-ms" value="1" min="1">
-                    <button class="btn-counter" type="button" onclick="ubahMukaSurat(1)">+</button>
+                    <button class="btn-counter" id="btnMinusMs" type="button" onclick="ubahMukaSurat(-1)" disabled>-</button>
+                    <input type="number" id="msBacaan" class="input-ms" value="1" min="1" disabled>
+                    <button class="btn-counter" id="btnPlusMs" type="button" onclick="ubahMukaSurat(1)" disabled>+</button>
                 </div>
 
-                <button class="btn-aksi" style="background:#0284c7; color:white; margin-top:10px;" onclick="simpanRekodBacaan()">💾 SIMPAN REKOD BACAAN</button>
+                <button id="btnSimpanBacaan" class="btn-aksi" style="background:#0284c7; color:white; margin-top:10px;" onclick="simpanRekodBacaan()" disabled>💾 SIMPAN REKOD BACAAN</button>
             </div>
         </div>
 
@@ -572,9 +592,17 @@
 
             nfcReaderInstance.onreading = event => {
                 const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
-                
-                if (document.getElementById('disiplinView').style.display === 'block') {
-                    const m = databaseMurid.find(x => x.uid === uid);
+                const m = databaseMurid.find(x => x.uid === uid);
+
+                if (document.getElementById('bacaanView').style.display === 'block') {
+                    if (m) {
+                        document.getElementById('selMuridBacaan').value = m.uid;
+                        tukarMuridBacaan(m.uid);
+                        alert(`Kad ${m.nama} telah disahkan! Akses kemaskini muka surat kini dibuka.`);
+                    } else {
+                        alert("Kad NFC ini belum didaftarkan.");
+                    }
+                } else if (document.getElementById('disiplinView').style.display === 'block') {
                     if (m) {
                         paparDisiplinAnak(m);
                     } else {
@@ -951,19 +979,25 @@
         });
 
         renderSenaraiRekodBacaan();
+        
+        if (!nfcReaderInstance && ('NDEFReader' in window)) {
+            aktifkanNfcLatarBelakang();
+        }
     }
 
     function ubahMukaSurat(nilai) {
         const input = document.getElementById('msBacaan');
+        if (input.disabled) return;
         let val = parseInt(input.value) || 1;
         val += nilai;
         if (val < 1) val = 1;
         input.value = val;
     }
 
-    function tukarMuridBacaan() {
-        const uid = document.getElementById('selMuridBacaan').value;
+    function tukarMuridBacaan(uidDisahkan = null) {
+        const uid = uidDisahkan || document.getElementById('selMuridBacaan').value;
         const form = document.getElementById('formKemaskiniBacaan');
+        
         if(uid) {
             form.style.display = 'block';
             const dataB = databaseBacaan[uid];
@@ -981,6 +1015,31 @@
                 tukarJenisBacaan();
                 document.getElementById('msBacaan').value = 1;
             }
+
+            // KAWALAN KESELAMATAN: Butang Tambah/Tolak Hanya Aktif Jika Diimbas NFC
+            const statusNfc = document.getElementById('statusKebenaranNfc');
+            const isUnlocked = (uidDisahkan !== null);
+
+            document.getElementById('jenisBacaan').disabled = !isUnlocked;
+            document.getElementById('jilidIqra').disabled = !isUnlocked;
+            document.getElementById('juzukQuran').disabled = !isUnlocked;
+            document.getElementById('msBacaan').disabled = !isUnlocked;
+            document.getElementById('btnMinusMs').disabled = !isUnlocked;
+            document.getElementById('btnPlusMs').disabled = !isUnlocked;
+            document.getElementById('btnSimpanBacaan').disabled = !isUnlocked;
+
+            if(isUnlocked) {
+                statusNfc.style.background = '#dcfce7';
+                statusNfc.style.color = '#15803d';
+                statusNfc.style.borderColor = '#22c55e';
+                statusNfc.innerHTML = '🔓 Kad NFC Disahkan! Anda boleh menambah/menolak muka surat sekarang.';
+            } else {
+                statusNfc.style.background = '#fee2e2';
+                statusNfc.style.color = '#b91c1c';
+                statusNfc.style.borderColor = '#f87171';
+                statusNfc.innerHTML = '🔒 Sila imbas kad NFC anak untuk membuka butang kemaskini muka surat.';
+            }
+
         } else {
             form.style.display = 'none';
         }
@@ -1023,6 +1082,7 @@
         await db.ref('rekodBacaan/' + uid).set(payload);
         alert("Rekod bacaan berjaya dikemaskini!");
         renderSenaraiRekodBacaan();
+        tukarMuridBacaan(); // Kunci kembali form selepas selesai simpan
     }
 
     function renderSenaraiRekodBacaan() {
