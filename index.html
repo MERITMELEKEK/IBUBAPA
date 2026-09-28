@@ -137,6 +137,10 @@
             font-size: 0.85rem;
         }
 
+        .badge-bacaan { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-top: 4px; }
+        .badge-iqra { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-quran { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+
         /* Modal NFC Popup */
         .overlay { 
             display: none; 
@@ -464,8 +468,8 @@
 
                 <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JENIS BACAAN:</label>
                 <select id="jenisBacaan" onchange="tukarJenisBacaan()" disabled>
-                    <option value="Iqra">Iqra'</option>
-                    <option value="Al-Quran">Al-Quran</option>
+                    <option value="IQRA">IQRA'</option>
+                    <option value="ALQURAN">AL-QURAN</option>
                 </select>
 
                 <div id="secIqra">
@@ -480,13 +484,8 @@
                     </select>
                 </div>
 
-                <div id="secQuran" style="display:none;">
-                    <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JUZUK AL-QURAN:</label>
-                    <input type="number" id="juzukQuran" min="1" max="30" value="1" placeholder="Juzuk (1-30)" disabled>
-                </div>
-
-                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN (DIKUNCI SECARA LALAI) -->
-                <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center;">MUKA SURAT BACAAN TERKINI:</label>
+                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN -->
+                <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-top:10px;">MUKA SURAT BACAAN TERKINI:</label>
                 <div class="counter-box">
                     <button class="btn-counter" id="btnMinusMs" type="button" onclick="ubahMukaSurat(-1)" disabled>-</button>
                     <input type="number" id="msBacaan" class="input-ms" value="1" min="1" disabled>
@@ -557,7 +556,6 @@
     let databaseMurid = [];
     let databaseSalahLaku = [];
     let databaseKerjaRumah = {};
-    let databaseBacaan = {};
     let curTahun, curKelas;
     let selectedHwTahun = null, selectedHwKelas = null;
     let nfcReaderInstance = null;
@@ -633,21 +631,19 @@
             document.getElementById('gNfcRalat').style.display = 'none';
 
             // Semak & Papar Rekod Bacaan Murid Dalam Popup
-            const dataB = databaseBacaan[m.uid];
             const boxBacaan = document.getElementById('gNfcBacaanBox');
             const detailBacaan = document.getElementById('gNfcBacaanDetail');
             boxBacaan.style.display = 'block';
 
-            if(dataB) {
-                const textBacaan = dataB.jenis === 'Al-Quran'
-                    ? `📖 Al-Quran (Juzuk ${dataB.juzuk || 1})`
-                    : `📘 Iqra' ${dataB.jilid || 1}`;
-                detailBacaan.innerHTML = `${textBacaan}<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">${dataB.mukaSurat || 1}</span>`;
-                document.getElementById('msBacaanPopup').value = dataB.mukaSurat || 1;
-            } else {
-                detailBacaan.innerHTML = `📘 Iqra' 1<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">1</span>`;
-                document.getElementById('msBacaanPopup').value = 1;
-            }
+            const jBacaan = m.jenisBacaan || 'IQRA';
+            const jilid = m.jilidIqra || '1';
+            const ms = m.mukaSurat || 1;
+
+            const textBacaan = jBacaan === 'ALQURAN'
+                ? `🟢 Al-Quran`
+                : `📖 Iqra' ${jilid}`;
+            detailBacaan.innerHTML = `${textBacaan}<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">${ms}</span>`;
+            document.getElementById('msBacaanPopup').value = ms;
 
             // Semak Kerja Rumah Kelas Anak
             const classKey = `${m.tahun}_${m.namaKelas}`;
@@ -709,21 +705,14 @@
         if(!muridNfcSemasa) return;
         const ms = parseInt(document.getElementById('msBacaanPopup').value) || 1;
         
-        const dataSediaAda = databaseBacaan[muridNfcSemasa.uid] || {};
-        let payload = {
-            jenis: dataSediaAda.jenis || 'Iqra',
-            mukaSurat: ms,
-            tarikhKemaskini: getTarikhHariIni(),
-            timestamp: Date.now()
-        };
+        const jBacaan = muridNfcSemasa.jenisBacaan || 'IQRA';
+        const jilid = muridNfcSemasa.jilidIqra || '1';
 
-        if(payload.jenis === 'Al-Quran') {
-            payload.juzuk = dataSediaAda.juzuk || 1;
-        } else {
-            payload.jilid = dataSediaAda.jilid || '1';
-        }
-
-        await db.ref('rekodBacaan/' + muridNfcSemasa.uid).set(payload);
+        await db.ref('pelajar/' + muridNfcSemasa.uid).update({
+            jenisBacaan: jBacaan,
+            jilidIqra: (jBacaan === 'IQRA') ? jilid : "-",
+            mukaSurat: ms
+        });
         alert(`Muka surat bacaan bagi ${muridNfcSemasa.nama} berjaya dikemaskini ke Muka Surat ${ms}!`);
     }
 
@@ -1000,18 +989,17 @@
         
         if(uid) {
             form.style.display = 'block';
-            const dataB = databaseBacaan[uid];
-            if(dataB) {
-                document.getElementById('jenisBacaan').value = dataB.jenis || 'Iqra';
+            const m = databaseMurid.find(x => x.uid === uid);
+            if(m) {
+                const jBacaan = m.jenisBacaan || 'IQRA';
+                document.getElementById('jenisBacaan').value = jBacaan;
                 tukarJenisBacaan();
-                if(dataB.jenis === 'Al-Quran') {
-                    document.getElementById('juzukQuran').value = dataB.juzuk || 1;
-                } else {
-                    document.getElementById('jilidIqra').value = dataB.jilid || 1;
+                if(jBacaan === 'IQRA') {
+                    document.getElementById('jilidIqra').value = m.jilidIqra || '1';
                 }
-                document.getElementById('msBacaan').value = dataB.mukaSurat || 1;
+                document.getElementById('msBacaan').value = m.mukaSurat || 1;
             } else {
-                document.getElementById('jenisBacaan').value = 'Iqra';
+                document.getElementById('jenisBacaan').value = 'IQRA';
                 tukarJenisBacaan();
                 document.getElementById('msBacaan').value = 1;
             }
@@ -1022,7 +1010,6 @@
 
             document.getElementById('jenisBacaan').disabled = !isUnlocked;
             document.getElementById('jilidIqra').disabled = !isUnlocked;
-            document.getElementById('juzukQuran').disabled = !isUnlocked;
             document.getElementById('msBacaan').disabled = !isUnlocked;
             document.getElementById('btnMinusMs').disabled = !isUnlocked;
             document.getElementById('btnPlusMs').disabled = !isUnlocked;
@@ -1047,11 +1034,9 @@
 
     function tukarJenisBacaan() {
         const jenis = document.getElementById('jenisBacaan').value;
-        if(jenis === 'Al-Quran') {
-            document.getElementById('secQuran').style.display = 'block';
+        if(jenis === 'ALQURAN') {
             document.getElementById('secIqra').style.display = 'none';
         } else {
-            document.getElementById('secQuran').style.display = 'none';
             document.getElementById('secIqra').style.display = 'block';
         }
     }
@@ -1063,23 +1048,16 @@
             return;
         }
 
-        const jenis = document.getElementById('jenisBacaan').value;
+        const jBacaan = document.getElementById('jenisBacaan').value;
         const ms = parseInt(document.getElementById('msBacaan').value) || 1;
-        
-        let payload = {
-            jenis: jenis,
-            mukaSurat: ms,
-            tarikhKemaskini: getTarikhHariIni(),
-            timestamp: Date.now()
-        };
+        const jilid = document.getElementById('jilidIqra').value;
 
-        if(jenis === 'Al-Quran') {
-            payload.juzuk = parseInt(document.getElementById('juzukQuran').value) || 1;
-        } else {
-            payload.jilid = document.getElementById('jilidIqra').value;
-        }
+        await db.ref('pelajar/' + uid).update({
+            jenisBacaan: jBacaan,
+            jilidIqra: (jBacaan === 'IQRA') ? jilid : "-",
+            mukaSurat: ms
+        });
 
-        await db.ref('rekodBacaan/' + uid).set(payload);
         alert("Rekod bacaan berjaya dikemaskini!");
         renderSenaraiRekodBacaan();
         tukarMuridBacaan(); // Kunci kembali form selepas selesai simpan
@@ -1089,25 +1067,28 @@
         const container = document.getElementById('senaraiRekodBacaan');
         container.innerHTML = "";
 
+        let sorted = [...databaseMurid].sort((a,b) => a.nama.localeCompare(b.nama));
         let count = 0;
-        for(let uid in databaseBacaan) {
-            const m = databaseMurid.find(x => x.uid === uid);
-            if(m) {
+
+        sorted.forEach(m => {
+            if(m.jenisBacaan || m.mukaSurat) {
                 count++;
-                const b = databaseBacaan[uid];
-                const infoDetail = b.jenis === 'Al-Quran' 
-                    ? `📖 <b>Al-Quran</b> - Juzuk ${b.juzuk || 1}, Muka Surat: <b>${b.mukaSurat || 1}</b>`
-                    : `📘 <b>Iqra' ${b.jilid || 1}</b> - Muka Surat: <b>${b.mukaSurat || 1}</b>`;
+                const j = m.jenisBacaan || 'IQRA';
+                const jilid = (j === 'ALQURAN') ? 'AL-QURAN' : `IQRA' ${m.jilidIqra || '1'}`;
+                const ms = m.mukaSurat || '1';
+
+                const badgeHTML = (j === 'ALQURAN') 
+                    ? `<span class="badge-bacaan badge-quran">🟢 AL-QURAN (M/S ${ms})</span>` 
+                    : `<span class="badge-bacaan badge-iqra">📖 IQRA' ${m.jilidIqra || '1'} (M/S ${ms})</span>`;
 
                 container.innerHTML += `
                 <div class="murid-item" style="border-left: 4px solid #0284c7;">
                     <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
                     <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">Tahun ${m.tahun} ${m.namaKelas}</div>
-                    <div style="font-size:0.85rem; color:var(--dark);">${infoDetail}</div>
-                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;">Tarikh Kemaskini: ${b.tarikhKemaskini || '-'}</div>
+                    <div>${badgeHTML}</div>
                 </div>`;
             }
-        }
+        });
 
         if(count === 0) {
             container.innerHTML = `<div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#64748b; border:1px solid #e2e8f0;">Belum ada rekod bacaan yang disimpan.</div>`;
@@ -1190,7 +1171,10 @@
         if(document.getElementById('senaraiView').style.display === 'block') reRenderSenarai();
         if(document.getElementById('kehadiranView').style.display === 'block') renderKehadiran();
         if(document.getElementById('rmtView').style.display === 'block') renderRMT();
-        if(document.getElementById('bacaanView').style.display === 'block') bukaBacaan();
+        if(document.getElementById('bacaanView').style.display === 'block') renderSenaraiRekodBacaan();
+        if(muridNfcSemasa && document.getElementById('popupNfcGlobal').style.display === 'flex') {
+            paparMaklumatKadAnak(muridNfcSemasa.uid);
+        }
     });
 
     db.ref('salahLaku').on('value', snap => {
@@ -1206,16 +1190,6 @@
         databaseKerjaRumah = snap.val() || {};
         if(selectedHwTahun && selectedHwKelas) {
             renderTugasanKelasHW();
-        }
-    });
-
-    db.ref('rekodBacaan').on('value', snap => {
-        databaseBacaan = snap.val() || {};
-        if(document.getElementById('bacaanView').style.display === 'block') {
-            renderSenaraiRekodBacaan();
-        }
-        if(muridNfcSemasa && document.getElementById('popupNfcGlobal').style.display === 'flex') {
-            paparMaklumatKadAnak(muridNfcSemasa.uid);
         }
     });
 
@@ -1244,12 +1218,17 @@
         list.sort((a,b) => (b.markah || 0) - (a.markah || 0)).forEach((m, indeks) => {
             const tagRMT = m.rmt ? `<span style="background:var(--rmt); color:white; font-size:0.6rem; padding:2px 6px; border-radius:4px; margin-left:4px;">RMT</span>` : '';
             
+            const j = m.jenisBacaan || 'IQRA';
+            const jilid = (j === 'ALQURAN') ? 'AL-QURAN' : `IQRA' ${m.jilidIqra || '1'}`;
+            const ms = m.mukaSurat || '1';
+
             container.innerHTML += `
             <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <span style="font-weight:bold; color:var(--primary); font-size:0.85rem;">#${indeks + 1}</span>
                     <b style="font-size:0.9rem; margin-left:5px;">${m.nama}</b> ${tagRMT}
                     <div style="font-size:0.75rem; color:#64748b; margin-left:22px;">Tahun ${m.tahun} ${m.namaKelas}</div>
+                    <div style="margin-left:22px;"><span class="badge-bacaan ${j==='ALQURAN'?'badge-quran':'badge-iqra'}">${jilid} (M/S ${ms})</span></div>
                 </div>
                 <span class="badge-skor">${m.markah || 0} Pts</span>
             </div>`;
