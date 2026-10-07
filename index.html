@@ -294,24 +294,27 @@
             <div class="score-big" id="gNfcSkorDisplay">0</div>
         </div>
 
-        <!-- Seksyen Rekod Bacaan Iqra' & Al-Quran Dalam Popup -->
-        <div id="gNfcBacaanBox" style="display:none; text-align:center; background:#f0f9ff; border:1px solid #bae6fd; padding:15px; border-radius:20px; margin-bottom:15px;">
-            <div style="font-size: 0.8rem; font-weight: 700; color: #0284c7; margin-bottom: 8px; display:flex; align-items:center; justify-content:center; gap:5px;">
-                📖 REKOD BACAAN TERKINI
+        <!-- Seksyen Rekod Bacaan Guru + Bacaan Rumah -->
+        <div id="gNfcBacaanBox" style="display:none; text-align:left; background:#f0f9ff; border:1px solid #bae6fd; padding:15px; border-radius:20px; margin-bottom:15px;">
+            <div style="font-size:0.8rem; font-weight:700; color:#0284c7; margin-bottom:10px; display:flex; align-items:center; gap:5px;">📖 REKOD BACAAN</div>
+            <div style="background:white; padding:12px; border-radius:14px; border:1px solid #bae6fd; margin-bottom:10px;">
+                <div style="font-size:0.7rem;font-weight:800;color:#64748b;">🔒 REKOD RASMI GURU</div>
+                <div id="gNfcRekodGuru" style="font-size:0.9rem;font-weight:800;color:#0f766e;margin-top:5px;">Belum ada rekod.</div>
+                <div id="gNfcGuruInfo" style="font-size:0.68rem;color:#64748b;margin-top:4px;"></div>
             </div>
-            <div id="gNfcBacaanDetail" style="font-size:0.9rem; font-weight:bold; color:var(--dark); margin-bottom:10px;">
-                Belum ada rekod.
+            <div style="background:#fffdf2; padding:12px; border-radius:14px; border:1px solid #fce38a;">
+                <div style="font-size:0.7rem;font-weight:800;color:#a16207;">🏠 REKOD BACAAN DI RUMAH</div>
+                <div id="gNfcRekodRumahSemasa" style="font-size:0.85rem;font-weight:700;color:#92400e;margin-top:5px;">Mengikut rekod guru.</div>
+                <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block; margin-top:10px;">MUKA SURAT BACAAN RUMAH:</label>
+                <div class="counter-box">
+                    <button class="btn-counter" id="btnMinusMsPopup" type="button" onclick="ubahMukaSuratPopup(-1)" disabled>-</button>
+                    <input type="number" id="msBacaanPopup" class="input-ms" value="1" min="1" disabled>
+                    <button class="btn-counter" id="btnPlusMsPopup" type="button" onclick="ubahMukaSuratPopup(1)" disabled>+</button>
+                </div>
+                <button id="btnSimpanRumahPopup" class="btn-aksi" style="background:#d97706; color:white; padding:8px; font-size:0.75rem; margin-top:5px;" onclick="simpanRekodBacaanDariPopup()" disabled>💾 SIMPAN REKOD RUMAH</button>
+                <div id="statusNfcPopup" style="font-size:0.65rem;color:#b91c1c;text-align:center;margin-top:8px;">🔒 Imbas kad anak untuk mengubah rekod bacaan di rumah.</div>
             </div>
-            
-            <label style="font-size:0.75rem; font-weight:700; color:#64748b; display:block;">KEMASKINI MUKA SURAT:</label>
-            <div class="counter-box">
-                <button class="btn-counter" type="button" onclick="ubahMukaSuratPopup(-1)">-</button>
-                <input type="number" id="msBacaanPopup" class="input-ms" value="1" min="1">
-                <button class="btn-counter" type="button" onclick="ubahMukaSuratPopup(1)">+</button>
-            </div>
-            <button class="btn-aksi" style="background:#0284c7; color:white; padding:8px; font-size:0.75rem; margin-top:5px;" onclick="simpanRekodBacaanDariPopup()">💾 SIMPAN MUKA SURAT</button>
         </div>
-
         <!-- Seksyen Kerja Rumah Murid (Muncul jika ada) -->
         <div id="gNfcHomeworkBox" style="display:none; text-align:left; background:#fffbe8; border:1px solid #fce38a; padding:15px; border-radius:20px; margin-bottom:15px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #d97706; margin-bottom: 8px; display:flex; align-items:center; gap:5px;">
@@ -460,39 +463,38 @@
                 <option value="">-- Sila Pilih Murid --</option>
             </select>
 
-            <div id="formKemaskiniBacaan" style="display:none; margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
-                <!-- STATUS KEBENARAN NFC -->
+            <div id="paparanBacaanGuru" style="display:none; margin-top:15px; background:#eff6ff; border:1px solid #bfdbfe; padding:15px; border-radius:18px;">
+                <div style="font-size:0.72rem;font-weight:800;color:#1d4ed8;">🔒 REKOD RASMI GURU</div>
+                <div id="detailBacaanGuru" style="font-size:1rem;font-weight:800;color:#1e3a8a;margin-top:5px;">-</div>
+                <div id="detailBacaanGuruMeta" style="font-size:0.7rem;color:#64748b;margin-top:5px;">Rekod ini hanya boleh diubah oleh guru.</div>
+            </div>
+
+            <div id="formKemaskiniBacaan" style="display:none; margin-top:12px; border-top:1px dashed #cbd5e1; padding-top:15px;">
                 <div id="statusKebenaranNfc" style="background:#fee2e2; color:#b91c1c; border:1px dashed #f87171; padding:10px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-bottom:12px; text-align:center;">
-                    🔒 Sila imbas kad NFC anak untuk membuka butang kemaskini muka surat.
+                    🔒 Imbas kad NFC anak untuk membuka rekod bacaan di rumah.
                 </div>
-
-                <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JENIS BACAAN:</label>
-                <select id="jenisBacaan" onchange="tukarJenisBacaan()" disabled>
-                    <option value="IQRA">IQRA'</option>
-                    <option value="ALQURAN">AL-QURAN</option>
-                </select>
-
-                <div id="secIqra">
-                    <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JILID IQRA':</label>
-                    <select id="jilidIqra" disabled>
-                        <option value="1">Iqra' 1</option>
-                        <option value="2">Iqra' 2</option>
-                        <option value="3">Iqra' 3</option>
-                        <option value="4">Iqra' 4</option>
-                        <option value="5">Iqra' 5</option>
-                        <option value="6">Iqra' 6</option>
+                <div style="background:#fffdf2;border:1px solid #fce38a;padding:14px;border-radius:16px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:#a16207;">🏠 REKOD BACAAN DI RUMAH</div>
+                    <div style="font-size:0.7rem;color:#64748b;margin:4px 0 10px;">Rekod ini bermula daripada rekod guru semasa. Perubahan di sini tidak mengubah rekod guru.</div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JENIS BACAAN:</label>
+                    <select id="jenisBacaan" onchange="tukarJenisBacaan()" disabled>
+                        <option value="IQRA">IQRA'</option><option value="ALQURAN">AL-QURAN</option>
                     </select>
+                    <div id="secIqra">
+                        <label style="font-size:0.8rem; font-weight:700; color:#64748b;">JILID IQRA':</label>
+                        <select id="jilidIqra" disabled>
+                            <option value="1">Iqra' 1</option><option value="2">Iqra' 2</option><option value="3">Iqra' 3</option>
+                            <option value="4">Iqra' 4</option><option value="5">Iqra' 5</option><option value="6">Iqra' 6</option>
+                        </select>
+                    </div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-top:10px;">MUKA SURAT BACAAN RUMAH:</label>
+                    <div class="counter-box">
+                        <button class="btn-counter" id="btnMinusMs" type="button" onclick="ubahMukaSurat(-1)" disabled>-</button>
+                        <input type="number" id="msBacaan" class="input-ms" value="1" min="1" disabled>
+                        <button class="btn-counter" id="btnPlusMs" type="button" onclick="ubahMukaSurat(1)" disabled>+</button>
+                    </div>
+                    <button id="btnSimpanBacaan" class="btn-aksi" style="background:#d97706; color:white; margin-top:10px;" onclick="simpanRekodBacaan()" disabled>💾 SIMPAN REKOD BACAAN RUMAH</button>
                 </div>
-
-                <!-- BUTTON TAMBAH & TOLAK MUKA SURAT BACAAN -->
-                <label style="font-size:0.8rem; font-weight:700; color:#64748b; display:block; text-align:center; margin-top:10px;">MUKA SURAT BACAAN TERKINI:</label>
-                <div class="counter-box">
-                    <button class="btn-counter" id="btnMinusMs" type="button" onclick="ubahMukaSurat(-1)" disabled>-</button>
-                    <input type="number" id="msBacaan" class="input-ms" value="1" min="1" disabled>
-                    <button class="btn-counter" id="btnPlusMs" type="button" onclick="ubahMukaSurat(1)" disabled>+</button>
-                </div>
-
-                <button id="btnSimpanBacaan" class="btn-aksi" style="background:#0284c7; color:white; margin-top:10px;" onclick="simpanRekodBacaan()" disabled>💾 SIMPAN REKOD BACAAN</button>
             </div>
         </div>
 
@@ -630,20 +632,20 @@
             document.getElementById('gNfcScoreBox').style.display = 'block';
             document.getElementById('gNfcRalat').style.display = 'none';
 
-            // Semak & Papar Rekod Bacaan Murid Dalam Popup
+            // Papar rekod rasmi guru + rekod bacaan di rumah secara berasingan.
             const boxBacaan = document.getElementById('gNfcBacaanBox');
-            const detailBacaan = document.getElementById('gNfcBacaanDetail');
             boxBacaan.style.display = 'block';
-
-            const jBacaan = m.jenisBacaan || 'IQRA';
-            const jilid = m.jilidIqra || '1';
-            const ms = m.mukaSurat || 1;
-
-            const textBacaan = jBacaan === 'ALQURAN'
-                ? `🟢 Al-Quran`
-                : `📖 Iqra' ${jilid}`;
-            detailBacaan.innerHTML = `${textBacaan}<br>Muka Surat: <span id="valMsPopup" style="color:#0284c7; font-size:1.1rem;">${ms}</span>`;
-            document.getElementById('msBacaanPopup').value = ms;
+            const guru = rekodGuruBacaan(m);
+            const rumah = rekodRumahBacaan(m);
+            document.getElementById('gNfcRekodGuru').innerText = teksBacaan(guru);
+            document.getElementById('gNfcGuruInfo').innerText = guru.guruNama ? `Ditanda oleh: ${guru.guruNama}` : 'Rekod rasmi guru';
+            document.getElementById('gNfcRekodRumahSemasa').innerText = teksBacaan(rumah);
+            document.getElementById('msBacaanPopup').value = rumah.mukaSurat || guru.mukaSurat || 1;
+            document.getElementById('btnMinusMsPopup').disabled = false;
+            document.getElementById('btnPlusMsPopup').disabled = false;
+            document.getElementById('btnSimpanRumahPopup').disabled = false;
+            document.getElementById('statusNfcPopup').innerHTML = '🔓 Kad NFC disahkan. Anda boleh mengubah rekod bacaan di rumah sahaja.';
+            document.getElementById('statusNfcPopup').style.color = '#15803d';
 
             // Semak Kerja Rumah Kelas Anak
             const classKey = `${m.tahun}_${m.namaKelas}`;
@@ -685,6 +687,9 @@
             document.getElementById('gNfcKelas').innerText = "UID: " + uid;
             document.getElementById('gNfcScoreBox').style.display = 'none';
             document.getElementById('gNfcBacaanBox').style.display = 'none';
+            document.getElementById('btnMinusMsPopup').disabled = true;
+            document.getElementById('btnPlusMsPopup').disabled = true;
+            document.getElementById('btnSimpanRumahPopup').disabled = true;
             document.getElementById('gNfcHomeworkBox').style.display = 'none';
             document.getElementById('gNfcRalat').style.display = 'block';
             document.getElementById('btnLihatDisiplinAnak').style.display = 'none';
@@ -697,23 +702,52 @@
         val += nilai;
         if (val < 1) val = 1;
         input.value = val;
-        const valDisplay = document.getElementById('valMsPopup');
-        if(valDisplay) valDisplay.innerText = val;
+        const rumahDisplay = document.getElementById('gNfcRekodRumahSemasa');
+        if(rumahDisplay && muridNfcSemasa) { const g = rekodGuruBacaan(muridNfcSemasa); const j = g.jenisBacaan || 'IQRA'; const jilid = g.jilidIqra || '1'; rumahDisplay.innerText = j === 'ALQURAN' ? `🟢 AL-QURAN — Muka Surat ${val}` : `📖 IQRA' ${jilid} — Muka Surat ${val}`; }
+    }
+
+    // ==================== PEMISAHAN REKOD BACAAN ====================
+    function rekodGuruBacaan(m) {
+        if (m && m.guruBacaan) return m.guruBacaan;
+        // Keserasian data lama: rekod lama dianggap rekod rasmi guru sehingga guru menyimpannya semula.
+        return {
+            jenisBacaan: (m && m.jenisBacaan) || 'IQRA',
+            jilidIqra: (m && m.jilidIqra) || '1',
+            mukaSurat: (m && m.mukaSurat) || 1,
+            guruNama: ''
+        };
+    }
+
+    function rekodRumahBacaan(m) {
+        if (m && m.rumahBacaan) return m.rumahBacaan;
+        // Rekod rumah yang belum pernah dibuat bermula daripada rekod guru semasa.
+        const g = rekodGuruBacaan(m);
+        return { jenisBacaan:g.jenisBacaan || 'IQRA', jilidIqra:g.jilidIqra || '1', mukaSurat:g.mukaSurat || 1, sumber:'GURU_SEMASA' };
+    }
+
+    function teksBacaan(b) {
+        const j = b && b.jenisBacaan ? b.jenisBacaan : 'IQRA';
+        const jilid = b && b.jilidIqra ? b.jilidIqra : '1';
+        const ms = b && b.mukaSurat ? b.mukaSurat : 1;
+        return j === 'ALQURAN' ? `🟢 AL-QURAN — Muka Surat ${ms}` : `📖 IQRA' ${jilid} — Muka Surat ${ms}`;
     }
 
     async function simpanRekodBacaanDariPopup() {
         if(!muridNfcSemasa) return;
-        const ms = parseInt(document.getElementById('msBacaanPopup').value) || 1;
-        
-        const jBacaan = muridNfcSemasa.jenisBacaan || 'IQRA';
-        const jilid = muridNfcSemasa.jilidIqra || '1';
-
-        await db.ref('pelajar/' + muridNfcSemasa.uid).update({
-            jenisBacaan: jBacaan,
-            jilidIqra: (jBacaan === 'IQRA') ? jilid : "-",
-            mukaSurat: ms
+        const ms = parseInt(document.getElementById('msBacaanPopup').value, 10) || 1;
+        if(ms < 1) return alert('Sila masukkan muka surat yang betul.');
+        const guru = rekodGuruBacaan(muridNfcSemasa);
+        const rumahLama = rekodRumahBacaan(muridNfcSemasa);
+        await db.ref('pelajar/' + muridNfcSemasa.uid + '/rumahBacaan').set({
+            jenisBacaan: rumahLama.jenisBacaan || guru.jenisBacaan || 'IQRA',
+            jilidIqra: (rumahLama.jenisBacaan || guru.jenisBacaan || 'IQRA') === 'IQRA' ? (rumahLama.jilidIqra || guru.jilidIqra || '1') : '-',
+            mukaSurat: ms,
+            sumberAwal: rumahLama.sumber || 'GURU_SEMASA',
+            dikemaskiniOleh: 'IBUBAPA',
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
         });
-        alert(`Muka surat bacaan bagi ${muridNfcSemasa.nama} berjaya dikemaskini ke Muka Surat ${ms}!`);
+        document.getElementById('gNfcRekodRumahSemasa').innerText = teksBacaan({ ...rumahLama, mukaSurat:ms });
+        alert(`Rekod bacaan di rumah bagi ${muridNfcSemasa.nama} berjaya dikemaskini. Rekod guru kekal tidak berubah.`);
     }
 
     function lihatDisiplinDariPopup() {
@@ -978,121 +1012,83 @@
         const input = document.getElementById('msBacaan');
         if (input.disabled) return;
         let val = parseInt(input.value) || 1;
-        val += nilai;
-        if (val < 1) val = 1;
+        val += nilai; if(val < 1) val = 1;
         input.value = val;
     }
 
     function tukarMuridBacaan(uidDisahkan = null) {
         const uid = uidDisahkan || document.getElementById('selMuridBacaan').value;
         const form = document.getElementById('formKemaskiniBacaan');
-        
-        if(uid) {
-            form.style.display = 'block';
-            const m = databaseMurid.find(x => x.uid === uid);
-            if(m) {
-                const jBacaan = m.jenisBacaan || 'IQRA';
-                document.getElementById('jenisBacaan').value = jBacaan;
-                tukarJenisBacaan();
-                if(jBacaan === 'IQRA') {
-                    document.getElementById('jilidIqra').value = m.jilidIqra || '1';
-                }
-                document.getElementById('msBacaan').value = m.mukaSurat || 1;
-            } else {
-                document.getElementById('jenisBacaan').value = 'IQRA';
-                tukarJenisBacaan();
-                document.getElementById('msBacaan').value = 1;
-            }
-
-            // KAWALAN KESELAMATAN: Butang Tambah/Tolak Hanya Aktif Jika Diimbas NFC
-            const statusNfc = document.getElementById('statusKebenaranNfc');
-            const isUnlocked = (uidDisahkan !== null);
-
-            document.getElementById('jenisBacaan').disabled = !isUnlocked;
-            document.getElementById('jilidIqra').disabled = !isUnlocked;
-            document.getElementById('msBacaan').disabled = !isUnlocked;
-            document.getElementById('btnMinusMs').disabled = !isUnlocked;
-            document.getElementById('btnPlusMs').disabled = !isUnlocked;
-            document.getElementById('btnSimpanBacaan').disabled = !isUnlocked;
-
-            if(isUnlocked) {
-                statusNfc.style.background = '#dcfce7';
-                statusNfc.style.color = '#15803d';
-                statusNfc.style.borderColor = '#22c55e';
-                statusNfc.innerHTML = '🔓 Kad NFC Disahkan! Anda boleh menambah/menolak muka surat sekarang.';
-            } else {
-                statusNfc.style.background = '#fee2e2';
-                statusNfc.style.color = '#b91c1c';
-                statusNfc.style.borderColor = '#f87171';
-                statusNfc.innerHTML = '🔒 Sila imbas kad NFC anak untuk membuka butang kemaskini muka surat.';
-            }
-
+        const guruBox = document.getElementById('paparanBacaanGuru');
+        if(!uid) { form.style.display='none'; guruBox.style.display='none'; return; }
+        const m = databaseMurid.find(x => x.uid === uid);
+        if(!m) { form.style.display='none'; guruBox.style.display='none'; return; }
+        const guru = rekodGuruBacaan(m);
+        const rumah = rekodRumahBacaan(m);
+        guruBox.style.display='block';
+        document.getElementById('detailBacaanGuru').innerText = teksBacaan(guru);
+        document.getElementById('detailBacaanGuruMeta').innerText = guru.guruNama ? `Ditanda oleh: ${guru.guruNama}. Rekod ini hanya boleh diubah oleh guru.` : 'Rekod ini hanya boleh diubah oleh guru.';
+        form.style.display='block';
+        const isUnlocked = uidDisahkan !== null;
+        document.getElementById('jenisBacaan').value = rumah.jenisBacaan || guru.jenisBacaan || 'IQRA';
+        document.getElementById('jilidIqra').value = rumah.jilidIqra || guru.jilidIqra || '1';
+        document.getElementById('msBacaan').value = rumah.mukaSurat || guru.mukaSurat || 1;
+        tukarJenisBacaan();
+        ['jenisBacaan','jilidIqra','msBacaan','btnMinusMs','btnPlusMs','btnSimpanBacaan'].forEach(id => document.getElementById(id).disabled = !isUnlocked);
+        const status = document.getElementById('statusKebenaranNfc');
+        if(isUnlocked) {
+            status.style.background='#dcfce7'; status.style.color='#15803d'; status.style.borderColor='#22c55e';
+            status.innerHTML='🔓 Kad NFC Disahkan! Anda boleh mengubah rekod bacaan di rumah sahaja.';
         } else {
-            form.style.display = 'none';
+            status.style.background='#fee2e2'; status.style.color='#b91c1c'; status.style.borderColor='#f87171';
+            status.innerHTML='🔒 Imbas kad NFC anak untuk membuka rekod bacaan di rumah.';
         }
     }
 
     function tukarJenisBacaan() {
         const jenis = document.getElementById('jenisBacaan').value;
-        if(jenis === 'ALQURAN') {
-            document.getElementById('secIqra').style.display = 'none';
-        } else {
-            document.getElementById('secIqra').style.display = 'block';
-        }
+        document.getElementById('secIqra').style.display = jenis === 'ALQURAN' ? 'none' : 'block';
     }
 
     async function simpanRekodBacaan() {
         const uid = document.getElementById('selMuridBacaan').value;
-        if(!uid) {
-            alert("Sila pilih murid terlebih dahulu.");
-            return;
-        }
-
+        if(!uid) return alert('Sila pilih murid terlebih dahulu.');
+        if(document.getElementById('btnSimpanBacaan').disabled) return alert('Sila imbas kad NFC anak terlebih dahulu.');
         const jBacaan = document.getElementById('jenisBacaan').value;
-        const ms = parseInt(document.getElementById('msBacaan').value) || 1;
+        const ms = parseInt(document.getElementById('msBacaan').value,10) || 1;
         const jilid = document.getElementById('jilidIqra').value;
-
-        await db.ref('pelajar/' + uid).update({
-            jenisBacaan: jBacaan,
-            jilidIqra: (jBacaan === 'IQRA') ? jilid : "-",
-            mukaSurat: ms
+        if(ms < 1) return alert('Sila masukkan muka surat yang betul.');
+        await db.ref('pelajar/' + uid + '/rumahBacaan').set({
+            jenisBacaan:jBacaan,
+            jilidIqra:jBacaan === 'IQRA' ? jilid : '-',
+            mukaSurat:ms,
+            sumberAwal:'GURU_SEMASA',
+            dikemaskiniOleh:'IBUBAPA',
+            updatedAt:firebase.database.ServerValue.TIMESTAMP
         });
-
-        alert("Rekod bacaan berjaya dikemaskini!");
+        alert('Rekod bacaan di rumah berjaya dikemaskini. Rekod guru kekal tidak berubah.');
         renderSenaraiRekodBacaan();
-        tukarMuridBacaan(); // Kunci kembali form selepas selesai simpan
+        tukarMuridBacaan();
     }
 
     function renderSenaraiRekodBacaan() {
         const container = document.getElementById('senaraiRekodBacaan');
-        container.innerHTML = "";
-
-        let sorted = [...databaseMurid].sort((a,b) => a.nama.localeCompare(b.nama));
+        container.innerHTML = '';
+        let sorted = [...databaseMurid].sort((a,b) => a.nama.localeCompare(b.nama,'ms'));
         let count = 0;
-
         sorted.forEach(m => {
-            if(m.jenisBacaan || m.mukaSurat) {
-                count++;
-                const j = m.jenisBacaan || 'IQRA';
-                const jilid = (j === 'ALQURAN') ? 'AL-QURAN' : `IQRA' ${m.jilidIqra || '1'}`;
-                const ms = m.mukaSurat || '1';
-
-                const badgeHTML = (j === 'ALQURAN') 
-                    ? `<span class="badge-bacaan badge-quran">🟢 AL-QURAN (M/S ${ms})</span>` 
-                    : `<span class="badge-bacaan badge-iqra">📖 IQRA' ${m.jilidIqra || '1'} (M/S ${ms})</span>`;
-
-                container.innerHTML += `
-                <div class="murid-item" style="border-left: 4px solid #0284c7;">
-                    <div style="font-weight:bold; font-size:0.9rem;">${m.nama}</div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">Tahun ${m.tahun} ${m.namaKelas}</div>
-                    <div>${badgeHTML}</div>
-                </div>`;
-            }
+            const guru = rekodGuruBacaan(m);
+            const rumah = rekodRumahBacaan(m);
+            count++;
+            container.innerHTML += `
+            <div class="murid-item" style="border-left:4px solid #0284c7;">
+                <div style="font-weight:bold;font-size:0.9rem;">${m.nama}</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-bottom:8px;">Tahun ${m.tahun} ${m.namaKelas}</div>
+                <div style="background:#eff6ff;padding:9px;border-radius:10px;margin-bottom:7px;"><b style="font-size:0.68rem;color:#1d4ed8;">🔒 GURU</b><br><span style="font-size:0.8rem;">${teksBacaan(guru)}</span></div>
+                <div style="background:#fffdf2;padding:9px;border-radius:10px;border:1px solid #fce38a;"><b style="font-size:0.68rem;color:#a16207;">🏠 RUMAH</b><br><span style="font-size:0.8rem;">${teksBacaan(rumah)}</span></div>
+            </div>`;
         });
-
-        if(count === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:30px; background:white; border-radius:20px; color:#64748b; border:1px solid #e2e8f0;">Belum ada rekod bacaan yang disimpan.</div>`;
-        }
+        if(count===0) container.innerHTML='<div style="text-align:center;padding:30px;background:white;border-radius:20px;color:#64748b;border:1px solid #e2e8f0;">Belum ada rekod bacaan.</div>';
     }
 
     // --- REKOD DISIPLIN ---
@@ -1218,9 +1214,10 @@
         list.sort((a,b) => (b.markah || 0) - (a.markah || 0)).forEach((m, indeks) => {
             const tagRMT = m.rmt ? `<span style="background:var(--rmt); color:white; font-size:0.6rem; padding:2px 6px; border-radius:4px; margin-left:4px;">RMT</span>` : '';
             
-            const j = m.jenisBacaan || 'IQRA';
-            const jilid = (j === 'ALQURAN') ? 'AL-QURAN' : `IQRA' ${m.jilidIqra || '1'}`;
-            const ms = m.mukaSurat || '1';
+            const rb = rekodGuruBacaan(m);
+            const j = rb.jenisBacaan || 'IQRA';
+            const jilid = (j === 'ALQURAN') ? 'AL-QURAN' : `IQRA' ${rb.jilidIqra || '1'}`;
+            const ms = rb.mukaSurat || '1';
 
             container.innerHTML += `
             <div class="murid-item" style="display:flex; justify-content:space-between; align-items:center;">
