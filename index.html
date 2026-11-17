@@ -324,6 +324,18 @@
 </head>
 <body>
 
+<!-- POPUP IMBASAN QR GLOBAL UNTUK IBU BAPA -->
+<div id="popupQrGlobalIbuBapa" class="overlay" style="z-index:10050;">
+    <div class="modal" style="max-width:420px;width:92%;text-align:center;">
+        <div style="font-size:38px;margin-bottom:8px;">📷</div>
+        <h3 style="margin:0 0 8px;color:var(--dark);">IMBAS KOD QR KAD ANAK</h3>
+        <p style="font-size:.82rem;color:#64748b;margin:0 0 12px;">Halakan kamera telefon kepada kod QR pada kad murid.</p>
+        <div id="qrReaderGlobalIbuBapa" style="width:100%;"></div>
+        <div id="statusQrGlobalIbuBapa" style="font-size:.8rem;color:#0f766e;font-weight:700;margin:10px 0;">Menyediakan kamera...</div>
+        <button class="btn-aksi" style="background:#e2e8f0;color:var(--dark);" onclick="hentiImbasQrGlobalIbuBapa()">TUTUP PENGIMBAS</button>
+    </div>
+</div>
+
 <!-- POPUP GLOBAL: SEMAKAN KAD MURID (NFC) -->
 <div id="popupNfcGlobal" class="overlay">
     <div class="modal" id="modalNfc">
@@ -394,6 +406,10 @@
             <div id="btnAktifNfc" class="card-btn card-full" style="background:var(--purple); color:white;" onclick="aktifkanNfcLatarBelakang()">
                 <span class="btn-icon">📡</span> 
                 <span>AKTIFKAN IMBASAN KAD ANAK (NFC)</span>
+            </div>
+            <div id="btnImbasQrUtama" class="card-btn card-full" style="background:#0f766e; color:white;" onclick="mulaImbasQrGlobalIbuBapa()">
+                <span class="btn-icon">📷</span>
+                <span>IMBAS KOD QR KAD ANAK (ALTERNATIF NFC)</span>
             </div>
             <div class="card-btn" style="color:var(--success)" onclick="bukaKehadiran()">
                 <span class="btn-icon">📅</span>
@@ -654,6 +670,8 @@
     let muridNfcSemasa = null;
     let bacaanRumahUidDisahkan = null;
     let qrScannerIbuBapa = null;
+    let qrScannerGlobalIbuBapa = null;
+    let qrGlobalSedangMemproses = false;
     let adminKadAktif = false;
 
     function getTarikhHariIni() {
@@ -661,6 +679,81 @@
         const localTime = d.getTime() + (d.getTimezoneOffset() * 60000);
         const myTime = new Date(localTime + (8 * 3600000)); 
         return myTime.toISOString().split('T')[0];
+    }
+
+    // --- PROSES KAD BERSAMA: NFC DAN QR ---
+    function prosesKadIbuBapaMengikutPaparan(uid, kaedah = 'QR') {
+        const id = String(uid || '').trim().replace(/:/g, '').toUpperCase();
+        const m = databaseMurid.find(x => String(x.uid || '').replace(/:/g, '').toUpperCase() === id);
+
+        if (document.getElementById('bacaanView').style.display === 'block') {
+            if (m) {
+                document.getElementById('selMuridBacaan').value = m.uid;
+                bacaanRumahUidDisahkan = m.uid;
+                tukarMuridBacaan(m.uid);
+                alert(`Kad ${m.nama} telah disahkan! Akses kemaskini muka surat kini dibuka.`);
+            } else {
+                alert(`Kod ${kaedah} ini belum didaftarkan.`);
+            }
+        } else if (document.getElementById('disiplinView').style.display === 'block') {
+            if (m) paparDisiplinAnak(m);
+            else alert(`Kod ${kaedah} ini belum didaftarkan.`);
+        } else {
+            paparMaklumatKadAnak(id);
+        }
+    }
+
+    async function mulaImbasQrGlobalIbuBapa() {
+        if (!window.Html5Qrcode) {
+            alert('Modul imbasan QR tidak dapat dimuatkan. Sila semak sambungan internet atau gunakan NFC.');
+            return;
+        }
+        const popup = document.getElementById('popupQrGlobalIbuBapa');
+        const status = document.getElementById('statusQrGlobalIbuBapa');
+        popup.style.display = 'flex';
+        status.innerText = 'Memulakan kamera...';
+        qrGlobalSedangMemproses = false;
+
+        if (qrScannerGlobalIbuBapa) {
+            try { await qrScannerGlobalIbuBapa.stop(); } catch(e) {}
+            try { qrScannerGlobalIbuBapa.clear(); } catch(e) {}
+            qrScannerGlobalIbuBapa = null;
+        }
+
+        qrScannerGlobalIbuBapa = new Html5Qrcode('qrReaderGlobalIbuBapa');
+        try {
+            await qrScannerGlobalIbuBapa.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 230, height: 230 } },
+                async decodedText => {
+                    if (qrGlobalSedangMemproses) return;
+                    qrGlobalSedangMemproses = true;
+                    const uid = String(decodedText || '').trim().replace(/:/g, '').toUpperCase();
+                    status.innerText = '✅ Kod QR dikesan. Membuka maklumat murid...';
+                    try { await qrScannerGlobalIbuBapa.stop(); } catch(e) {}
+                    try { qrScannerGlobalIbuBapa.clear(); } catch(e) {}
+                    qrScannerGlobalIbuBapa = null;
+                    popup.style.display = 'none';
+                    prosesKadIbuBapaMengikutPaparan(uid, 'QR');
+                    qrGlobalSedangMemproses = false;
+                },
+                () => {}
+            );
+            status.innerText = 'Halakan kamera kepada kod QR pada kad murid.';
+        } catch(e) {
+            status.innerText = 'Kamera tidak dapat dibuka. Benarkan akses kamera pada pelayar.';
+            alert('Kamera tidak dapat diakses. Pastikan portal dibuka melalui HTTPS dan kebenaran kamera diberikan.');
+        }
+    }
+
+    async function hentiImbasQrGlobalIbuBapa() {
+        if (qrScannerGlobalIbuBapa) {
+            try { await qrScannerGlobalIbuBapa.stop(); } catch(e) {}
+            try { qrScannerGlobalIbuBapa.clear(); } catch(e) {}
+            qrScannerGlobalIbuBapa = null;
+        }
+        qrGlobalSedangMemproses = false;
+        document.getElementById('popupQrGlobalIbuBapa').style.display = 'none';
     }
 
     // --- INTEGRASI NFC GLOBAL UNTUK IBU BAPA ---
@@ -685,26 +778,7 @@
 
             nfcReaderInstance.onreading = event => {
                 const uid = event.serialNumber.replace(/:/g, "").toUpperCase();
-                const m = databaseMurid.find(x => x.uid === uid);
-
-                if (document.getElementById('bacaanView').style.display === 'block') {
-                    if (m) {
-                        document.getElementById('selMuridBacaan').value = m.uid;
-                        bacaanRumahUidDisahkan = m.uid;
-                        tukarMuridBacaan(m.uid);
-                        alert(`Kad ${m.nama} telah disahkan! Akses kemaskini muka surat kini dibuka.`);
-                    } else {
-                        alert("Kad NFC ini belum didaftarkan.");
-                    }
-                } else if (document.getElementById('disiplinView').style.display === 'block') {
-                    if (m) {
-                        paparDisiplinAnak(m);
-                    } else {
-                        alert("Kad NFC ini belum didaftarkan.");
-                    }
-                } else {
-                    paparMaklumatKadAnak(uid);
-                }
+                prosesKadIbuBapaMengikutPaparan(uid, 'NFC');
             };
         } catch(e) {
             alert("Akses NFC ditolak atau tidak diizinkan oleh peranti.");
