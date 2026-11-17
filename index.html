@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         :root { 
             --primary: #4361ee; 
@@ -277,6 +279,47 @@
             background: #f1f5f9 !important;
             color: #94a3b8 !important;
         }
+        /* Kawasan kad hanya disembunyikan pada paparan biasa. */
+        @media screen {
+            #printKadArea { display:none !important; }
+        }
+        @media print {
+            @page { size:A4 portrait; margin:8mm; }
+            html, body { margin:0 !important; padding:0 !important; width:auto !important; }
+            body * { visibility:hidden !important; }
+            #printKadArea, #printKadArea * { visibility:visible !important; }
+            #printKadArea {
+                position:static !important; inset:auto !important;
+                display:block !important; width:194mm !important;
+                max-width:194mm !important; margin:0 !important; padding:0 !important;
+                visibility:visible !important;
+            }
+            .print-sheet {
+                width:194mm !important; height:281mm !important;
+                margin:0 !important; padding:0 !important;
+                display:grid !important;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                grid-template-rows:repeat(5, minmax(0, 1fr));
+                gap:3mm; box-sizing:border-box;
+                break-after:page; page-break-after:always;
+                overflow:hidden;
+            }
+            .print-sheet:last-child { break-after:auto; page-break-after:auto; }
+            .print-card {
+                min-width:0; min-height:0; border:1px dashed #64748b;
+                border-radius:3mm; display:flex; align-items:center;
+                gap:3mm; padding:3mm; box-sizing:border-box;
+                overflow:hidden; break-inside:avoid;
+                font-family:Arial,sans-serif; background:white;
+            }
+            .print-card .qr-print { width:25mm;height:25mm;flex:0 0 25mm; }
+            .print-card .qr-print img, .print-card .qr-print canvas { width:25mm !important;height:25mm !important; }
+            .print-card .card-school {font-size:7pt;font-weight:bold;color:#334155;margin-bottom:2mm;}
+            .print-card .card-name {font-size:9pt;font-weight:bold;line-height:1.2;margin-bottom:1mm;}
+            .print-card .card-class {font-size:7pt;margin-bottom:2mm;}
+            .print-card .card-id {font-size:7pt;word-break:break-all;font-weight:bold;}
+            .no-print { display:none !important; }
+        }
     </style>
 </head>
 <body>
@@ -372,6 +415,10 @@
                 <span class="btn-icon">🚨</span>
                 <span>REKOD DISIPLIN</span>
             </div>
+            <div class="card-btn card-full" style="color:#7209b7;" onclick="bukaPortalAdminKad()">
+                <span class="btn-icon">🪪</span>
+                <span>PORTAL ADMIN KAD QR & ID MURID</span>
+            </div>
         </div>
         
         <div class="section-title">🏆 Kedudukan Merit Mengikut Kelas</div>
@@ -457,8 +504,19 @@
             <h3 style="margin:0; color:#0284c7; font-size:1.1rem;">REKOD BACAAN IQRA' & AL-QURAN</h3>
         </div>
 
+        <div style="background:#f8fafc;padding:16px;border:1px solid #cbd5e1;border-radius:18px;margin-bottom:15px;">
+            <div style="font-weight:800;color:#1e293b;margin-bottom:8px;">🔐 AKSES IBU BAPA</div>
+            <p style="font-size:0.75rem;color:#64748b;margin:0 0 10px;">Jika kad NFC tidak dapat diimbas, masukkan ID unik murid pada kad. Atau imbas kod QR anak.</p>
+            <label style="font-size:0.75rem;font-weight:700;color:#475569;">ID UNIK KAD MURID</label>
+            <input type="text" id="inputIdMurid" placeholder="Masukkan ID unik murid" autocomplete="off" style="width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:12px;box-sizing:border-box;margin:6px 0 8px;font-family:inherit;">
+            <button class="btn-aksi" style="background:#2563eb;margin-bottom:8px;" onclick="sahkanIdMurid()">🔓 SAHKAN ID MURID</button>
+            <button class="btn-aksi" style="background:#0f766e;" onclick="mulaImbasQrIbuBapa()">📷 IMBAS KOD QR ANAK</button>
+            <div id="qrReaderIbuBapa" style="display:none;margin-top:12px;"></div>
+            <div id="statusAksesIbuBapa" style="font-size:0.75rem;text-align:center;margin-top:8px;color:#b91c1c;">Belum ada murid disahkan.</div>
+        </div>
+
         <div style="background:white; padding:20px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:15px;">
-            <label style="font-size:0.8rem; font-weight:700; color:#64748b;">PILIH ANAK / MURID:</label>
+            <label style="font-size:0.8rem; font-weight:700; color:#64748b;">PILIH ANAK / MURID (untuk melihat rekod sahaja):</label>
             <select id="selMuridBacaan" onchange="tukarMuridBacaan()">
                 <option value="">-- Sila Pilih Murid --</option>
             </select>
@@ -500,6 +558,38 @@
 
         <div class="section-title">📜 Sejarah Rekod Bacaan Terkini</div>
         <div id="senaraiRekodBacaan"></div>
+    </div>
+
+    <!-- Portal Admin Kad QR -->
+    <div id="adminKadView" class="view-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <button class="btn-aksi" style="background:var(--dark);width:auto;padding:8px 16px;" onclick="kembali()">⬅️ Kembali</button>
+            <h3 style="margin:0;font-size:1rem;">PORTAL ADMIN KAD MURID</h3>
+        </div>
+        <div id="adminLoginBox" style="background:white;padding:20px;border-radius:18px;border:1px solid #e2e8f0;">
+            <h4 style="margin-top:0;">🔐 Log Masuk Admin</h4>
+            <input type="password" id="adminPasswordKad" placeholder="Masukkan kata laluan admin" style="width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:12px;box-sizing:border-box;margin-bottom:10px;">
+            <button class="btn-aksi" style="background:#7209b7;" onclick="logMasukAdminKad()">LOG MASUK</button>
+            <p style="font-size:0.7rem;color:#64748b;margin-bottom:0;">Portal ini untuk kegunaan pentadbir sekolah.</p>
+        </div>
+        <div id="adminPanelKad" style="display:none;">
+            <div style="background:white;padding:15px;border-radius:18px;margin-bottom:12px;border:1px solid #e2e8f0;">
+                <div style="font-weight:800;">🪪 Cetakan Kad QR & ID Unik Murid</div>
+                <p style="font-size:0.75rem;color:#64748b;">Kad dijana berdasarkan semua murid yang telah didaftarkan dalam pangkalan data Firebase.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <select id="adminTapisTahun" onchange="renderKadAdmin()" style="flex:1;min-width:120px;">
+                        <option value="">Semua Tahun</option><option value="1">Tahun 1</option><option value="2">Tahun 2</option><option value="3">Tahun 3</option><option value="4">Tahun 4</option><option value="5">Tahun 5</option><option value="6">Tahun 6</option>
+                    </select>
+                    <select id="adminTapisKelas" onchange="renderKadAdmin()" style="flex:1;min-width:120px;">
+                        <option value="">Semua Kelas</option><option value="DELIMA">DELIMA</option><option value="ZAMRUD">ZAMRUD</option>
+                    </select>
+                </div>
+                <div id="jumlahKadAdmin" style="font-size:0.8rem;font-weight:700;color:#1d4ed8;margin:8px 0;">Memuatkan murid...</div>
+                <button class="btn-aksi" style="background:#0f766e;margin-bottom:8px;" onclick="cetakKadMurid()">🖨️ CETAK KAD (10 KEPING SETIAP A4)</button>
+                <button class="btn-aksi" style="background:#64748b;" onclick="logKeluarAdminKad()">LOG KELUAR ADMIN</button>
+            </div>
+            <div id="pratontonKadAdmin" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;"></div>
+        </div>
     </div>
 
     <!-- View Disiplin -->
@@ -562,6 +652,9 @@
     let selectedHwTahun = null, selectedHwKelas = null;
     let nfcReaderInstance = null;
     let muridNfcSemasa = null;
+    let bacaanRumahUidDisahkan = null;
+    let qrScannerIbuBapa = null;
+    let adminKadAktif = false;
 
     function getTarikhHariIni() {
         const d = new Date();
@@ -597,6 +690,7 @@
                 if (document.getElementById('bacaanView').style.display === 'block') {
                     if (m) {
                         document.getElementById('selMuridBacaan').value = m.uid;
+                        bacaanRumahUidDisahkan = m.uid;
                         tukarMuridBacaan(m.uid);
                         alert(`Kad ${m.nama} telah disahkan! Akses kemaskini muka surat kini dibuka.`);
                     } else {
@@ -768,6 +862,7 @@
         document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
         document.getElementById('menuFolder').style.display = 'block';
         document.getElementById('cariUtama').value = "";
+        document.getElementById('adminKadView').style.display = 'none';
     }
 
     // --- KEHADIRAN ---
@@ -1029,7 +1124,7 @@
         document.getElementById('detailBacaanGuru').innerText = teksBacaan(guru);
         document.getElementById('detailBacaanGuruMeta').innerText = guru.guruNama ? `Ditanda oleh: ${guru.guruNama}. Rekod ini hanya boleh diubah oleh guru.` : 'Rekod ini hanya boleh diubah oleh guru.';
         form.style.display='block';
-        const isUnlocked = uidDisahkan !== null;
+        const isUnlocked = (uidDisahkan !== null && bacaanRumahUidDisahkan === uid) || bacaanRumahUidDisahkan === uid;
         document.getElementById('jenisBacaan').value = rumah.jenisBacaan || guru.jenisBacaan || 'IQRA';
         document.getElementById('jilidIqra').value = rumah.jilidIqra || guru.jilidIqra || '1';
         document.getElementById('msBacaan').value = rumah.mukaSurat || guru.mukaSurat || 1;
@@ -1089,6 +1184,210 @@
             </div>`;
         });
         if(count===0) container.innerHTML='<div style="text-align:center;padding:30px;background:white;border-radius:20px;color:#64748b;border:1px solid #e2e8f0;">Belum ada rekod bacaan.</div>';
+    }
+
+
+    // --- AKSES IBU BAPA MELALUI ID UNIK / KOD QR ---
+    function sahkanIdMurid() {
+        const id = document.getElementById('inputIdMurid').value.trim().toUpperCase();
+        if (!id) return alert('Sila masukkan ID unik murid.');
+        const m = databaseMurid.find(x => String(x.uid).toUpperCase() === id);
+        if (!m) {
+            bacaanRumahUidDisahkan = null;
+            document.getElementById('statusAksesIbuBapa').innerText = '❌ ID tidak ditemui. Sila semak ID pada kad anak.';
+            document.getElementById('statusAksesIbuBapa').style.color = '#b91c1c';
+            tukarMuridBacaan();
+            return;
+        }
+        sahkanAksesMurid(m);
+    }
+
+    function sahkanAksesMurid(m) {
+        bacaanRumahUidDisahkan = m.uid;
+        document.getElementById('selMuridBacaan').value = m.uid;
+        tukarMuridBacaan(m.uid);
+        document.getElementById('statusAksesIbuBapa').innerText = `✅ Disahkan: ${m.nama} • Tahun ${m.tahun} ${m.namaKelas}. Rekod rumah boleh dikemaskini.`;
+        document.getElementById('statusAksesIbuBapa').style.color = '#15803d';
+    }
+
+    async function mulaImbasQrIbuBapa() {
+        if (!window.Html5Qrcode) return alert('Modul imbasan QR tidak dapat dimuatkan. Sila gunakan ID unik murid.');
+        const reader = document.getElementById('qrReaderIbuBapa');
+        reader.style.display = 'block';
+        if (qrScannerIbuBapa) {
+            try { await qrScannerIbuBapa.stop(); } catch(e) {}
+            qrScannerIbuBapa = null;
+        }
+        qrScannerIbuBapa = new Html5Qrcode('qrReaderIbuBapa');
+        try {
+            await qrScannerIbuBapa.start({ facingMode:'environment' }, { fps:10, qrbox:{width:220,height:220} }, async decodedText => {
+                const uid = String(decodedText).trim().toUpperCase();
+                const m = databaseMurid.find(x => String(x.uid).toUpperCase() === uid);
+                try { await qrScannerIbuBapa.stop(); } catch(e) {}
+                reader.style.display = 'none';
+                if (m) sahkanAksesMurid(m);
+                else {
+                    document.getElementById('statusAksesIbuBapa').innerText = '❌ Kod QR tidak sepadan dengan ID murid berdaftar.';
+                    document.getElementById('statusAksesIbuBapa').style.color = '#b91c1c';
+                }
+            });
+        } catch(e) {
+            reader.style.display = 'none';
+            alert('Kamera tidak dapat diakses. Benarkan akses kamera atau gunakan ID unik murid.');
+        }
+    }
+
+    // --- PORTAL ADMIN: JANA & CETAK KAD QR ---
+    function bukaPortalAdminKad() {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display='none');
+        document.getElementById('menuFolder').style.display='none';
+        document.getElementById('adminKadView').style.display='block';
+        document.getElementById('adminLoginBox').style.display = adminKadAktif ? 'none' : 'block';
+        document.getElementById('adminPanelKad').style.display = adminKadAktif ? 'block' : 'none';
+        if (adminKadAktif) renderKadAdmin();
+    }
+
+    function logMasukAdminKad() {
+        const pass = document.getElementById('adminPasswordKad').value;
+        if (pass !== 'mba0024') return alert('Kata laluan tidak betul.');
+        adminKadAktif = true;
+        document.getElementById('adminLoginBox').style.display='none';
+        document.getElementById('adminPanelKad').style.display='block';
+        renderKadAdmin();
+    }
+
+    function logKeluarAdminKad() {
+        adminKadAktif = false;
+        document.getElementById('adminPasswordKad').value='';
+        document.getElementById('adminPanelKad').style.display='none';
+        document.getElementById('adminLoginBox').style.display='block';
+    }
+
+    function muridUntukKad() {
+        const thn = document.getElementById('adminTapisTahun').value;
+        const kls = document.getElementById('adminTapisKelas').value;
+        return databaseMurid.filter(m => (!thn || String(m.tahun) === thn) && (!kls || m.namaKelas === kls))
+            .sort((a,b) => (Number(a.tahun)-Number(b.tahun)) || String(a.namaKelas).localeCompare(String(b.namaKelas)) || String(a.nama).localeCompare(String(b.nama),'ms'));
+    }
+
+    function renderKadAdmin() {
+        if (!adminKadAktif) return;
+        const list = muridUntukKad();
+        document.getElementById('jumlahKadAdmin').innerText = `${list.length} murid ditemui. Setiap helaian A4 mengandungi 10 kad.`;
+        const container = document.getElementById('pratontonKadAdmin');
+        container.innerHTML = '';
+        list.slice(0,30).forEach(m => {
+            const item = document.createElement('div');
+            item.style.cssText='background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;';
+            const qr = document.createElement('div');
+            qr.style.cssText='width:76px;height:76px;flex-shrink:0;';
+            item.appendChild(qr);
+            const info = document.createElement('div');
+            info.innerHTML = `<b>${escapeKadHtml(m.nama)}</b><div style="font-size:0.75rem;color:#64748b;">Tahun ${escapeKadHtml(m.tahun)} ${escapeKadHtml(m.namaKelas)}</div><div style="font-size:0.7rem;word-break:break-all;font-weight:bold;">ID: ${escapeKadHtml(m.uid)}</div>`;
+            item.appendChild(info);
+            container.appendChild(item);
+            if (window.QRCode) new QRCode(qr,{text:String(m.uid),width:76,height:76,correctLevel:QRCode.CorrectLevel.M});
+        });
+        if (list.length > 30) {
+            const note=document.createElement('p'); note.textContent='Pratonton memaparkan 30 murid pertama. Cetakan akan merangkumi semua murid yang ditapis.';
+            container.appendChild(note);
+        }
+    }
+
+    function escapeKadHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function cetakKadMurid() {
+        if (!adminKadAktif) return alert('Sila log masuk admin.');
+        const list = muridUntukKad();
+        if (!list.length) return alert('Tiada murid untuk dicetak.');
+        if (!window.QRCode) return alert('Modul QR belum dimuatkan. Semak sambungan internet dan cuba semula.');
+
+        // Cetak melalui dokumen iframe yang bersih supaya CSS aplikasi dan
+        // kedudukan elemen tersembunyi tidak menghasilkan halaman kosong.
+        const halaman = [];
+        for (let i = 0; i < list.length; i += 10) {
+            const kadHtml = list.slice(i, i + 10).map(m => {
+                const qrTemp = document.createElement('div');
+                new QRCode(qrTemp, {
+                    text: String(m.uid),
+                    width: 256,
+                    height: 256,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                const canvas = qrTemp.querySelector('canvas');
+                const img = qrTemp.querySelector('img');
+                const qrSrc = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+                return `
+                    <article class="kad">
+                        <img class="qr" src="${qrSrc}" alt="QR ${escapeKadHtml(m.uid)}">
+                        <div class="maklumat">
+                            <div class="sekolah">SK MELEKEK • KAD MURID</div>
+                            <div class="nama">${escapeKadHtml(m.nama)}</div>
+                            <div class="kelas">Tahun ${escapeKadHtml(m.tahun)} ${escapeKadHtml(m.namaKelas)}</div>
+                            <div class="id">ID UNIK: ${escapeKadHtml(m.uid)}</div>
+                            <div class="arahan">Imbas QR untuk rekod bacaan di rumah</div>
+                        </div>
+                    </article>`;
+            }).join('');
+            halaman.push(`<section class="helaian">${kadHtml}</section>`);
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+        document.body.appendChild(iframe);
+
+        const css = `
+            @page { size: A4 portrait; margin: 8mm; }
+            * { box-sizing: border-box; }
+            html, body { margin: 0; padding: 0; width: 100%; }
+            body { font-family: Arial, sans-serif; color: #111; }
+            .helaian {
+                width: 194mm; height: 281mm; margin: 0; padding: 0;
+                display: grid; grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(5, 1fr); gap: 3mm;
+                overflow: hidden; break-after: page; page-break-after: always;
+            }
+            .helaian:last-child { break-after: auto; page-break-after: auto; }
+            .kad {
+                min-width: 0; min-height: 0; border: 0.3mm dashed #64748b;
+                border-radius: 3mm; padding: 3mm; display: flex;
+                align-items: center; gap: 3mm; overflow: hidden;
+                break-inside: avoid; background: #fff;
+            }
+            .qr { width: 25mm; height: 25mm; flex: 0 0 25mm; }
+            .maklumat { min-width: 0; overflow-wrap: anywhere; }
+            .sekolah { font-size: 7pt; font-weight: bold; margin-bottom: 2mm; }
+            .nama { font-size: 9pt; font-weight: bold; line-height: 1.2; margin-bottom: 1mm; }
+            .kelas { font-size: 7pt; margin-bottom: 2mm; }
+            .id { font-size: 7pt; font-weight: bold; overflow-wrap: anywhere; }
+            .arahan { font-size: 6pt; margin-top: 2mm; }
+            @media screen { body { display: none; } }
+        `;
+
+        const doc = iframe.contentDocument;
+        doc.open();
+        doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>Cetak Kad Murid</title><style>${css}</style></head><body>${halaman.join('')}</body></html>`);
+        doc.close();
+
+        const bersihkan = () => {
+            if (iframe.isConnected) iframe.remove();
+        };
+        iframe.onload = () => {
+            const images = Array.from(doc.images);
+            Promise.all(images.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+                .then(() => {
+                    setTimeout(() => {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }, 250);
+                });
+        };
+        iframe.contentWindow.addEventListener('afterprint', bersihkan, { once: true });
+        // Sandaran jika pelayar tidak menghantar peristiwa afterprint.
+        setTimeout(bersihkan, 120000);
     }
 
     // --- REKOD DISIPLIN ---
